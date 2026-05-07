@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal Login – Kairi St Mary's Academy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #0d1b2a;
+        --navy2: #163050;
+        --gold: #c8962a;
+        --gold-light: #e8b84b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      .login-wrap {
+        display: grid;
+        grid-template-columns: 1fr 480px;
+        min-height: 100vh;
+      }
+      @media (max-width: 900px) {
+        .login-wrap {
+          grid-template-columns: 1fr;
+        }
+        .hero-panel {
+          display: none;
+        }
+        .form-panel {
+          padding: 32px 24px;
+        }
+      }
+      .hero-panel {
+        background:
+          linear-gradient(
+            160deg,
+            rgba(13, 27, 42, 0.88) 0%,
+            rgba(13, 27, 42, 0.6) 60%,
+            rgba(200, 150, 42, 0.18) 100%
+          ),
+          url("https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1400&q=85")
+            center/cover no-repeat;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 48px 52px;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-crest {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 32px rgba(200, 150, 42, 0.4);
+        font-family: "Playfair Display", serif;
+        font-weight: 700;
+        font-size: 26px;
+        color: white;
+      }
+      .hero-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      }
+      .stat-box {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(200, 150, 42, 0.25);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 18px 16px;
+      }
+      .form-panel {
+        background: #0d1b2a;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 52px 48px;
+        position: relative;
+      }
+      .role-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+      .role-card {
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .role-card:hover {
+        border-color: rgba(200, 150, 42, 0.5);
+        background: rgba(200, 150, 42, 0.05);
+      }
+      .role-card.active {
+        border-color: var(--gold);
+        background: rgba(200, 150, 42, 0.1);
+        box-shadow: 0 0 0 3px rgba(200, 150, 42, 0.12);
+      }
+      .role-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        margin: 0 auto 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        transition: all 0.25s;
+      }
+      .role-card.active .role-icon {
+        background: rgba(200, 150, 42, 0.15);
+      }
+      .field-wrap {
+        margin-bottom: 16px;
+      }
+      .field-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+        margin-bottom: 8px;
+      }
+      .field-input-wrap {
+        position: relative;
+      }
+      .field-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+      }
+      .field-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1.5px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 13px 14px 13px 42px;
+        color: white;
+        font-size: 14px;
+        font-family: "DM Sans", sans-serif;
+        transition: all 0.2s;
+        outline: none;
+      }
+      .field-input::placeholder {
+        color: rgba(255, 255, 255, 0.2);
+      }
+      .field-input:focus {
+        border-color: var(--gold);
+        background: rgba(200, 150, 42, 0.05);
+        box-shadow: 0 0 0 3px rgba(200, 150, 42, 0.12);
+      }
+      .pw-toggle {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        transition: color 0.2s;
+        padding: 0;
+      }
+      .pw-toggle:hover {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .login-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: "DM Sans", sans-serif;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        transition: all 0.25s;
+        box-shadow: 0 4px 20px rgba(200, 150, 42, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .login-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 28px rgba(200, 150, 42, 0.4);
+      }
+      .login-btn:disabled {
+        opacity: 0.75;
+        cursor: not-allowed;
+      }
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .portal-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(200, 150, 42, 0.15);
+        border: 1px solid rgba(200, 150, 42, 0.3);
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--gold);
+      }
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--gold);
+        animation: blink 1.8s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 11px;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .err-box {
+        display: none;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        color: #fca5a5;
+        font-size: 13px;
+        align-items: center;
+        gap: 8px;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-6px);
+        }
+        40%,
+        80% {
+          transform: translateX(6px);
+        }
+      }
+      .shake {
+        animation: shake 0.4s ease;
+      }
+      @keyframes fadeSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .anim-in {
+        animation: fadeSlideUp 0.55s ease both;
+      }
+      .feature-pill {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 12px 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-wrap">
+      <!-- ── LEFT HERO PANEL ── -->
+      <div class="hero-panel">
+        <div>
+          <div class="flex items-center gap-4 mb-10">
+            <div class="hero-crest">S</div>
+            <div>
+              <div
+                style="
+                  font-family: &quot;Playfair Display&quot;, serif;
+                  font-weight: 700;
+                  font-size: 22px;
+                  color: white;
+                  line-height: 1.2;
+                "
+              >
+                Kairi St Mary's Academy
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  letter-spacing: 0.12em;
+                  text-transform: uppercase;
+                  color: rgba(200, 150, 42, 0.8);
+                  margin-top: 2px;
+                "
+              >
+                Gatundu North · Kiambu County
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              font-family: &quot;Playfair Display&quot;, serif;
+              font-size: 38px;
+              font-weight: 700;
+              color: white;
+              line-height: 1.25;
+              margin-bottom: 18px;
+              max-width: 420px;
+            "
+          >
+            Nurturing Excellence<br /><em style="color: var(--gold-light)"
+              >and Character</em
+            >
+          </div>
+          <p
+            style="
+              color: rgba(255, 255, 255, 0.5);
+              font-size: 15px;
+              max-width: 380px;
+              line-height: 1.7;
+            "
+          >
+            Your secure portal to academic progress, fee management, and school
+            communications — all in one place.
+          </p>
+        </div>
+        <div style="margin: 40px 0">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <div class="feature-pill">
+              <div style="font-size: 20px">📊</div>
+              <div>
+                <div style="color: white; font-size: 13px; font-weight: 600">
+                  CBC Gradebook & Progress Reports
+                </div>
+                <div style="color: rgba(255, 255, 255, 0.4); font-size: 11px">
+                  Term-over-term academic tracking with strand-level performance
+                </div>
+              </div>
+            </div>
+            <div class="feature-pill">
+              <div style="font-size: 20px">💳</div>
+              <div>
+                <div style="color: white; font-size: 13px; font-weight: 600">
+                  Fee Payments & Receipts
+                </div>
+                <div style="color: rgba(255, 255, 255, 0.4); font-size: 11px">
+                  Download and share receipts instantly via WhatsApp
+                </div>
+              </div>
+            </div>
+            <div class="feature-pill">
+              <div style="font-size: 20px">📢</div>
+              <div>
+                <div style="color: white; font-size: 13px; font-weight: 600">
+                  Notices & Announcements
+                </div>
+                <div style="color: rgba(255, 255, 255, 0.4); font-size: 11px">
+                  Real-time school-wide communications and alerts
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div
+                style="
+                  font-family: &quot;Playfair Display&quot;, serif;
+                  font-size: 28px;
+                  font-weight: 700;
+                  color: var(--gold-light);
+                "
+              >
+                216+
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: rgba(255, 255, 255, 0.4);
+                  margin-top: 2px;
+                "
+              >
+                Students Enrolled
+              </div>
+            </div>
+            <div class="stat-box">
+              <div
+                style="
+                  font-family: &quot;Playfair Display&quot;, serif;
+                  font-size: 28px;
+                  font-weight: 700;
+                  color: var(--gold-light);
+                "
+              >
+                18
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: rgba(255, 255, 255, 0.4);
+                  margin-top: 2px;
+                "
+              >
+                Teaching Staff
+              </div>
+            </div>
+            <div class="stat-box">
+              <div
+                style="
+                  font-family: &quot;Playfair Display&quot;, serif;
+                  font-size: 28px;
+                  font-weight: 700;
+                  color: var(--gold-light);
+                "
+              >
+                3
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: rgba(255, 255, 255, 0.4);
+                  margin-top: 2px;
+                "
+              >
+                Academic Levels
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              margin-top: 20px;
+              color: rgba(255, 255, 255, 0.25);
+              font-size: 11px;
+            "
+          >
+            © 2025 Kairi St Mary's Academy
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT FORM PANEL ── -->
+      <div class="form-panel">
+        <div
+          style="
+            position: relative;
+            z-index: 1;
+            max-width: 380px;
+            margin: 0 auto;
+            width: 100%;
+          "
+        >
+          <!-- Header -->
+          <div class="anim-in" style="margin-bottom: 32px">
+            <div class="portal-badge" style="margin-bottom: 16px">
+              <span class="badge-dot"></span
+              ><span id="portal-badge-text">Student Portal</span>
+            </div>
+            <h1
+              style="
+                font-family: &quot;Playfair Display&quot;, serif;
+                font-size: 30px;
+                font-weight: 700;
+                color: white;
+                margin: 0 0 6px;
+              "
+            >
+              Welcome Back
+            </h1>
+            <p
+              style="
+                color: rgba(255, 255, 255, 0.38);
+                font-size: 14px;
+                margin: 0;
+              "
+            >
+              Select your role and sign in securely
+            </p>
+          </div>
+
+          <!-- Role selector -->
+          <div class="anim-in role-grid" id="role-grid">
+            <div
+              class="role-card active"
+              onclick="setRole('student', this)"
+              data-role="student"
+            >
+              <div class="role-icon">🎒</div>
+              <div style="color: white; font-size: 12px; font-weight: 600">
+                Student
+              </div>
+            </div>
+            <div
+              class="role-card"
+              onclick="setRole('teacher', this)"
+              data-role="teacher"
+            >
+              <div class="role-icon">📚</div>
+              <div style="color: white; font-size: 12px; font-weight: 600">
+                Teacher
+              </div>
+            </div>
+            <div
+              class="role-card"
+              onclick="setRole('director', this)"
+              data-role="director"
+            >
+              <div class="role-icon">🏫</div>
+              <div style="color: white; font-size: 12px; font-weight: 600">
+                Director
+              </div>
+            </div>
+          </div>
+
+          <!-- Email field -->
+          <div class="anim-in field-wrap">
+            <label class="field-label" id="id-label">Email Address</label>
+            <div class="field-input-wrap">
+              <span class="field-icon"
+                ><svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  /></svg
+              ></span>
+              <input
+                class="field-input"
+                id="id-input"
+                type="email"
+                placeholder="your@email.com"
+                autocomplete="email"
+              />
+            </div>
+          </div>
+
+          <!-- Password field -->
+          <div class="anim-in field-wrap">
+            <label class="field-label" id="pw-label">Password</label>
+            <div class="field-input-wrap">
+              <span class="field-icon"
+                ><svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  /></svg
+              ></span>
+              <input
+                class="field-input"
+                id="pw-input"
+                type="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+              />
+              <button class="pw-toggle" onclick="togglePw()" type="button">
+                <svg
+                  id="eye-icon"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember + Forgot -->
+          <div
+            class="anim-in"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 22px;
+            "
+          >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="remember-me"
+                style="width: 15px; height: 15px; accent-color: var(--gold)"
+              />
+              <span style="color: rgba(255, 255, 255, 0.38); font-size: 12px"
+                >Remember me</span
+              >
+            </label>
+            <a
+              href="#"
+              onclick="handleForgot(event)"
+              style="
+                color: var(--gold);
+                font-size: 12px;
+                text-decoration: none;
+                font-weight: 500;
+              "
+              >Forgot password?</a
+            >
+          </div>
+
+          <!-- Error message -->
+          <div id="error-msg" class="err-box">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span id="error-text">Please fill in all fields.</span>
+          </div>
+
+          <!-- Login button -->
+          <div class="anim-in">
+            <button class="login-btn" id="login-btn" onclick="handleLogin()">
+              <span id="btn-text">Sign In to Portal</span>
+              <span id="btn-arrow">→</span>
+              <div class="spinner" id="btn-spinner"></div>
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="anim-in divider">OR CONTINUE WITH</div>
+
+          <!-- Google login -->
+          <div class="anim-in">
+            <button
+              onclick="handleGoogleLogin()"
+              style="
+                width: 100%;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1.5px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 13px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                transition: all 0.2s;
+                font-family: &quot;DM Sans&quot;, sans-serif;
+                color: rgba(255, 255, 255, 0.75);
+                font-size: 14px;
+                font-weight: 500;
+              "
+              onmouseover="
+                this.style.borderColor = 'rgba(255,255,255,0.25)';
+                this.style.background = 'rgba(255,255,255,0.07)';
+              "
+              onmouseout="
+                this.style.borderColor = 'rgba(255,255,255,0.1)';
+                this.style.background = 'rgba(255,255,255,0.04)';
+              "
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              Sign in with Google
+            </button>
+          </div>
+
+          <!-- Footer -->
+          <div class="anim-in" style="margin-top: 28px; text-align: center">
+            <p
+              style="
+                color: rgba(255, 255, 255, 0.2);
+                font-size: 11px;
+                line-height: 1.7;
+              "
+            >
+              Having trouble? Contact
+              <a
+                href="mailto:ict@kairistmarys.ac.ke"
+                style="color: rgba(200, 150, 42, 0.7); text-decoration: none"
+                >ict@kairistmarys.ac.ke</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // ═══════════════════════════════════════════
+      // FIREBASE IMPORTS
+      // ═══════════════════════════════════════════
+      import { auth, db } from "./firebase-config.js";
+      import {
+        signInWithEmailAndPassword,
+        GoogleAuthProvider,
+        signInWithPopup,
+        sendPasswordResetEmail,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import {
+        doc,
+        getDoc,
+        collection,
+        query,
+        where,
+        getDocs,
+        limit,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      // ═══════════════════════════════════════════
+      // ROLE CONFIG
+      // ═══════════════════════════════════════════
+      let currentRole = "student";
+      const ROLE_CONFIG = {
+        student: { label: "Student Portal", portal: "student-portal.html" },
+        teacher: { label: "Teacher Portal", portal: "teacher-portal.html" },
+        director: { label: "Director's Panel", portal: "director.html" },
+      };
+
+      // ═══════════════════════════════════════════
+      // HELPERS
+      // ═══════════════════════════════════════════
+      function showErr(msg) {
+        const e = document.getElementById("error-msg");
+        e.style.display = "flex";
+        document.getElementById("error-text").textContent = msg;
+        document.getElementById("login-btn").classList.add("shake");
+        setTimeout(
+          () => document.getElementById("login-btn").classList.remove("shake"),
+          400,
+        );
+      }
+      function hideErr() {
+        document.getElementById("error-msg").style.display = "none";
+      }
+
+      function setBusy(busy) {
+        document.getElementById("btn-text").textContent = busy
+          ? "Signing in…"
+          : "Sign In to Portal";
+        document.getElementById("btn-arrow").style.display = busy ? "none" : "";
+        document.getElementById("btn-spinner").style.display = busy
+          ? "block"
+          : "none";
+        document.getElementById("login-btn").disabled = busy;
+      }
+
+      // Expose to HTML onclick attributes
+      window.setRole = function (role, el) {
+        currentRole = role;
+        document
+          .querySelectorAll(".role-card")
+          .forEach((c) => c.classList.remove("active"));
+        el.classList.add("active");
+        document.getElementById("portal-badge-text").textContent =
+          ROLE_CONFIG[role].label;
+
+        // Update labels based on role for clarity
+        const idLabel = document.getElementById("id-label");
+        const idInput = document.getElementById("id-input");
+        const pwLabel = document.getElementById("pw-label");
+        const pwInput = document.getElementById("pw-input");
+
+        if (role === "student") {
+          idLabel.textContent = "Parent Email Address";
+          idInput.placeholder = "parent@example.com";
+          pwLabel.textContent = "Admission Number";
+          pwInput.placeholder = "e.g. ADM001";
+        } else {
+          idLabel.textContent = "Work Email Address";
+          idInput.placeholder = "your@email.com";
+          pwLabel.textContent = "Password";
+          pwInput.placeholder = "Enter your password";
+        }
+        hideErr();
+      };
+
+      window.togglePw = function () {
+        const inp = document.getElementById("pw-input");
+        inp.type = inp.type === "password" ? "text" : "password";
+      };
+
+      window.handleForgot = async function (e) {
+        e.preventDefault();
+        const email = document.getElementById("id-input").value.trim();
+        if (!email) {
+          showErr(
+            "Enter your email address first, then click Forgot password.",
+          );
+          return;
+        }
+        try {
+          await sendPasswordResetEmail(auth, email);
+          hideErr();
+          alert(
+            "Password reset email sent to " + email + ". Check your inbox.",
+          );
+        } catch (err) {
+          showErr(err.message);
+        }
+      };
+
+      // ═══════════════════════════════════════════
+      // MAIN LOGIN — Firebase Auth (email + password)
+      // ═══════════════════════════════════════════
+      window.handleLogin = async function () {
+        const email = document.getElementById("id-input").value.trim();
+        const password = document.getElementById("pw-input").value.trim();
+
+        if (!email) {
+          showErr("Please enter your email address.");
+          return;
+        }
+        if (!password) {
+          showErr("Please enter your password.");
+          return;
+        }
+
+        hideErr();
+        setBusy(true);
+
+        try {
+          // 1. Sign in with Firebase Auth
+          let loginPassword = password;
+          if (currentRole === "student") {
+            loginPassword = password.toUpperCase();
+          }
+
+          const cred = await signInWithEmailAndPassword(
+            auth,
+            email,
+            loginPassword,
+          );
+          const uid = cred.user.uid;
+
+          // 2. Fetch user (Try UID first, then email fallback for pre-registered users)
+          let userData = null;
+          const userSnap = await getDoc(doc(db, "users", uid));
+
+          if (userSnap.exists()) {
+            userData = userSnap.data();
+          } else {
+            // Fallback: search by email/parent_email if UID doc doesn't exist yet
+            const emailField =
+              currentRole === "student" ? "parent_email" : "email";
+            const q = query(
+              collection(db, "users"),
+              where(emailField, "==", email),
+              limit(1),
+            );
+            const querySnap = await getDocs(q);
+            if (!querySnap.empty) {
+              userData = querySnap.docs[0].data();
+            }
+          }
+
+          if (!userData) {
+            throw new Error(
+              "Your account was not found in the system. Contact the school office.",
+            );
+          }
+          const role = userData.role || "student";
+
+          // 3. Verify role matches the selected card
+          if (role !== currentRole) {
+            throw new Error(
+              `This account is registered as a "${role}". Please select the correct role above.`,
+            );
+          }
+
+          // 4. Save session to localStorage so the portal can read it
+          const session = {
+            uid,
+            role,
+            full_name:
+              userData.full_name ||
+              userData.fullName ||
+              cred.user.displayName ||
+              "User",
+            email: userData.email || email,
+            adm_number: userData.adm_number || "",
+            class_stream: userData.class_stream || "",
+            photo_url: userData.photo_url || cred.user.photoURL || "",
+          };
+          localStorage.setItem("ksmSession", JSON.stringify(session));
+
+          // 5. Redirect to correct portal
+          const portal = ROLE_CONFIG[role]?.portal || "student-portal.html";
+          window.location.href = portal;
+        } catch (err) {
+          console.error("Login error:", err);
+          let msg = err.message;
+          // Make Firebase error messages friendlier
+          if (
+            msg.includes("wrong-password") ||
+            msg.includes("invalid-credential")
+          )
+            msg = "Incorrect password. Please try again.";
+          if (msg.includes("user-not-found") || msg.includes("no user"))
+            msg = "No account found with that email address.";
+          if (msg.includes("invalid-email"))
+            msg = "Please enter a valid email address.";
+          if (msg.includes("too-many-requests"))
+            msg =
+              "Too many failed attempts. Please wait a moment and try again.";
+          showErr(msg);
+          setBusy(false);
+        }
+      };
+
+      // ═══════════════════════════════════════════
+      // GOOGLE LOGIN
+      // ═══════════════════════════════════════════
+      window.handleGoogleLogin = async function () {
+        hideErr();
+        setBusy(true);
+        try {
+          const provider = new GoogleAuthProvider();
+          const result = await signInWithPopup(auth, provider);
+          const uid = result.user.uid;
+          const email = result.user.email;
+
+          // Try UID lookup first, then email fallback
+          let userSnap = await getDoc(doc(db, "users", uid));
+          let userData = null;
+
+          if (userSnap.exists()) {
+            userData = userSnap.data();
+          } else {
+            const emailField =
+              currentRole === "student" ? "parent_email" : "email";
+            const q = query(
+              collection(db, "users"),
+              where(emailField, "==", email),
+              limit(1),
+            );
+            const querySnap = await getDocs(q);
+            if (!querySnap.empty) {
+              userData = querySnap.docs[0].data();
+            }
+          }
+
+          if (!userData) {
+            throw new Error(
+              "Your Google account is not linked to a portal account. Contact the school.",
+            );
+          }
+          const role = userData.role || "student";
+
+          if (role !== currentRole) {
+            throw new Error(
+              `This Google account is linked to the "${role}" portal. Select the correct role.`,
+            );
+          }
+
+          const session = {
+            uid,
+            role,
+            full_name: userData.full_name || result.user.displayName || "User",
+            email: userData.email || result.user.email,
+            adm_number: userData.adm_number || "",
+            class_stream: userData.class_stream || "",
+            photo_url: userData.photo_url || result.user.photoURL || "",
+          };
+          localStorage.setItem("ksmSession", JSON.stringify(session));
+          window.location.href =
+            ROLE_CONFIG[role]?.portal || "student-portal.html";
+        } catch (err) {
+          let msg = err.message;
+          if (msg.includes("popup-closed")) msg = "Sign-in was cancelled.";
+          showErr(msg);
+          setBusy(false);
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,3122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kairi St Mary's | Teacher Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bg: "#F4F6FB",
+              card: "#FFFFFF",
+              primary: "#1E6B4A",
+              primaryLight: "#2A8F62",
+              primarySoft: "#E8F5EE",
+              navy: "#23384F",
+              muted: "#6B7A90",
+              success: "#35B37E",
+              warning: "#F39C52",
+              danger: "#E86D6D",
+              softBlue: "#EDF2FF",
+              softGreen: "#EAF9F1",
+              softPink: "#FFF0F0",
+              softYellow: "#FFF7E9",
+              softPurple: "#F3EEFF",
+              softTeal: "#E8F8F5",
+            },
+            boxShadow: { card: "0 10px 30px rgba(31,41,55,0.08)" },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+      .nav-btn {
+        transition: all 0.18s;
+        cursor: pointer;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .anim {
+        animation: fadeUp 0.4s ease both;
+      }
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(35, 56, 79, 0.45);
+        z-index: 90;
+      }
+      @media (max-width: 1023px) {
+        #sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.25s;
+          position: fixed;
+          z-index: 100;
+          height: 100vh;
+        }
+        #sidebar.open {
+          transform: translateX(0);
+        }
+        #sidebar-overlay.show {
+          display: block;
+        }
+      }
+      #fb-loading {
+        position: fixed;
+        inset: 0;
+        background: rgba(244, 246, 251, 0.97);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 14px;
+      }
+      @keyframes fb-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .fb-spinner {
+        width: 46px;
+        height: 46px;
+        border: 4px solid #e8f5ee;
+        border-top-color: #1e6b4a;
+        border-radius: 50%;
+        animation: fb-spin 0.75s linear infinite;
+      }
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(35, 56, 79, 0.6);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal-box {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        width: 90%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: fadeUp 0.25s ease;
+      }
+      .tt-cell {
+        min-width: 110px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
+      }
+      .tt-cell:hover {
+        opacity: 0.8;
+        transform: scale(1.02);
+      }
+      .subject-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      input[type="text"],
+      input[type="number"],
+      input[type="email"],
+      select,
+      textarea {
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      input[type="email"]:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #1e6b4a !important;
+        box-shadow: 0 0 0 3px rgba(30, 107, 74, 0.12);
+      }
+      .fee-row {
+        transition: background 0.15s;
+      }
+      .fee-row:hover {
+        background: #f8fcf9;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .badge-paid {
+        background: #eaf9f1;
+        color: #1a7a50;
+      }
+      .badge-partial {
+        background: #fff7e9;
+        color: #9c6012;
+      }
+      .badge-unpaid {
+        background: #fff0f0;
+        color: #b83a3a;
+      }
+      .save-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #1e6b4a;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 999;
+        transform: translateY(80px);
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+      }
+      .save-toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body class="bg-bg text-navy">
+    <!-- Loading -->
+    <div id="fb-loading">
+      <div class="fb-spinner"></div>
+      <div
+        id="fb-load-msg"
+        style="color: #23384f; font-weight: 600; font-size: 15px"
+      >
+        Loading Teacher Portal…
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="save-toast" class="save-toast">✓ Saved successfully</div>
+
+    <!-- Sidebar overlay -->
+    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Finance Modal -->
+    <div id="finance-modal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Update Student Finance
+          </h3>
+          <button
+            onclick="closeFinanceModal()"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div id="finance-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Timetable Cell Edit Modal -->
+    <div id="tt-modal" class="modal-overlay">
+      <div class="modal-box" style="max-width: 400px">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Edit Timetable Slot
+          </h3>
+          <button
+            onclick="closeTTModal()"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div id="tt-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="add-student-modal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Add New Student
+          </h3>
+          <button
+            onclick="closeAddStudentModal()"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div id="add-student-modal-body">
+          <div class="text-center text-muted text-sm py-4">Loading form...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="min-h-screen p-3 md:p-4">
+      <div
+        class="min-h-[calc(100vh-1.5rem)] rounded-[2rem] bg-[#EFF5F1] p-3 md:p-4 shadow-inner"
+      >
+        <div
+          class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 min-h-[calc(100vh-2.5rem)]"
+        >
+          <!-- SIDEBAR -->
+          <aside
+            id="sidebar"
+            class="bg-white rounded-[1.8rem] shadow-card p-4 flex flex-col"
+          >
+            <div class="flex items-center gap-3 px-2 py-2 mb-6">
+              <div
+                class="w-11 h-11 rounded-2xl bg-primary text-white grid place-items-center shadow-lg"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-6 h-6 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 3L2 9l10 6 10-6-10-6zM2 17l10 6 10-6M2 13l10 6 10-6"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div
+                  class="font-semibold leading-tight"
+                  style="font-family: &quot;Playfair Display&quot;, serif"
+                >
+                  Kairi St Mary's
+                </div>
+                <div class="text-xs text-muted">Teacher Portal</div>
+              </div>
+            </div>
+
+            <nav
+              class="space-y-1 text-[15px] font-medium flex-1 overflow-y-auto scrollbar-hide"
+            >
+              <div
+                class="px-4 py-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Main
+              </div>
+              <button
+                data-view="dashboard"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primarySoft text-primary"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 12h7V3H3v9Zm11 9h7v-6h-7v6ZM14 3v9h7V3h-7ZM3 21h7v-6H3v6Z"
+                  /></svg
+                >Dashboard
+              </button>
+              <button
+                data-view="profile"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 20c0-4 3.6-7 8-7s8 3 8 7"
+                  /></svg
+                >My Profile
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Students
+              </div>
+              <button
+                data-view="students"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                  />
+                  <circle cx="9" cy="7" r="4" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                  /></svg
+                >My Students
+              </button>
+              <button
+                data-view="grades"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 18h16M6 14l3-3 3 2 6-7M16 6h2v2"
+                  /></svg
+                >Grade Entry
+              </button>
+              <button
+                data-view="attendance-mgmt"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 5h16v16H4z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 3v4M16 3v4M4 9h16M9 14l2 2 4-4"
+                  /></svg
+                >Attendance
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Finance
+              </div>
+              <button
+                data-view="finance"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2 10h20M12 15h.01"
+                  /></svg
+                >Finance Manager
+                <span
+                  class="ml-auto text-[9px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold"
+                  >NEW</span
+                >
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Schedule
+              </div>
+              <button
+                data-view="timetable"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 9h18M9 21V9"
+                  /></svg
+                >Timetable Editor
+                <span
+                  class="ml-auto text-[9px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold"
+                  >NEW</span
+                >
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                School
+              </div>
+              <button
+                data-view="notices"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10 21h4"
+                  /></svg
+                >Post Notice
+              </button>
+            </nav>
+
+            <div class="mt-4 rounded-[1.6rem] bg-primarySoft p-4">
+              <div class="flex items-center gap-3">
+                <div
+                  id="sb-avatar"
+                  class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#2A8F62] to-[#1E6B4A] text-white grid place-items-center font-bold text-lg"
+                >
+                  T
+                </div>
+                <div>
+                  <div id="sb-name" class="font-semibold text-sm leading-tight">
+                    Loading…
+                  </div>
+                  <div id="sb-meta" class="text-xs text-muted">Teacher</div>
+                </div>
+              </div>
+              <div class="mt-3 flex gap-4 text-xs text-muted">
+                <span>Term: <b class="text-navy">2</b></span
+                ><span>Year: <b class="text-navy">2025</b></span>
+              </div>
+              <button
+                onclick="handleLogout()"
+                class="mt-3 w-full py-2 rounded-xl text-xs font-semibold text-center bg-white text-muted hover:bg-slate-100 transition"
+              >
+                Sign out
+              </button>
+            </div>
+          </aside>
+
+          <!-- MAIN -->
+          <main
+            class="bg-[#F7FAF8] rounded-[1.8rem] p-4 md:p-5 overflow-hidden min-h-[calc(100vh-4.5rem)] flex flex-col"
+          >
+            <div
+              class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5"
+            >
+              <div class="flex items-center gap-3">
+                <button
+                  onclick="toggleSidebar()"
+                  class="lg:hidden w-10 h-10 rounded-full bg-white shadow-card grid place-items-center"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-5 h-5 fill-none stroke-current stroke-[2] text-navy"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+                <div>
+                  <div
+                    id="welcome-heading"
+                    class="text-[22px] md:text-[26px] font-semibold leading-tight"
+                  >
+                    Good morning!
+                  </div>
+                  <div id="currentDate" class="text-sm text-muted mt-1">
+                    Loading…
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div
+                  id="top-avatar"
+                  class="w-10 h-10 rounded-full bg-gradient-to-br from-[#2A8F62] to-[#1E6B4A] text-white grid place-items-center font-bold text-sm"
+                >
+                  T
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+              <!-- DASHBOARD -->
+              <div id="view-dashboard" class="view active space-y-4">
+                <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                  <div
+                    class="rounded-[1.4rem] bg-primarySoft p-4 shadow-card anim"
+                    style="animation-delay: 0.05s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-primary text-white grid place-items-center"
+                        ><svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                          />
+                          <circle cx="9" cy="7" r="4" /></svg></span
+                      >Total Students
+                    </div>
+                    <div
+                      id="stat-students"
+                      class="text-[34px] font-semibold mt-2 text-primary"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-primary rounded-full w-20 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                  <div
+                    class="rounded-[1.4rem] bg-softBlue p-4 shadow-card anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-[#5B5EF7] text-white grid place-items-center"
+                        ><svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 12l2 2 4-4"
+                          />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M4 5h16v14H4z"
+                          /></svg></span
+                      >Present Today
+                    </div>
+                    <div
+                      id="stat-present"
+                      class="text-[34px] font-semibold mt-2 text-[#5B5EF7]"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-[#5B5EF7] rounded-full w-16 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                  <div
+                    class="rounded-[1.4rem] bg-softYellow p-4 shadow-card anim"
+                    style="animation-delay: 0.15s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-warning text-white grid place-items-center"
+                        ><svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <rect x="2" y="5" width="20" height="14" rx="2" />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M2 10h20"
+                          /></svg></span
+                      >Fees Outstanding
+                    </div>
+                    <div
+                      id="stat-outstanding"
+                      class="text-[28px] font-semibold mt-2 text-warning"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-warning rounded-full w-16 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                  <div
+                    class="rounded-[1.4rem] bg-softPink p-4 shadow-card anim"
+                    style="animation-delay: 0.2s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-danger text-white grid place-items-center"
+                        ><svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7"
+                          />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M10 21h4"
+                          /></svg></span
+                      >Absent Today
+                    </div>
+                    <div
+                      id="stat-absent"
+                      class="text-[34px] font-semibold mt-2 text-danger"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-danger rounded-full w-16 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <!-- Quick Actions -->
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.25s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Quick Actions
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                      <button
+                        onclick="activate('attendance-mgmt')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-primarySoft hover:bg-green-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-primary text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M9 12l2 2 4-4M4 5h16v14H4z"
+                            />
+                          </svg>
+                        </div>
+                        <span class="text-xs font-semibold text-navy"
+                          >Mark Attendance</span
+                        >
+                      </button>
+                      <button
+                        onclick="activate('grades')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softBlue hover:bg-blue-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-[#5B5EF7] text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M4 18h16M6 14l3-3 3 2 6-7"
+                            />
+                          </svg>
+                        </div>
+                        <span class="text-xs font-semibold text-navy"
+                          >Enter Grades</span
+                        >
+                      </button>
+                      <button
+                        onclick="activate('finance')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softYellow hover:bg-yellow-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-warning text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M2 10h20"
+                            />
+                          </svg>
+                        </div>
+                        <span class="text-xs font-semibold text-navy"
+                          >Finance Manager</span
+                        >
+                      </button>
+                      <button
+                        onclick="activate('timetable')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softPurple hover:bg-purple-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-[#7C3AED] text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M3 9h18M9 21V9"
+                            />
+                          </svg>
+                        </div>
+                        <span class="text-xs font-semibold text-navy"
+                          >Edit Timetable</span
+                        >
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Today's Schedule -->
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.3s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Today's Schedule
+                    </h3>
+                    <div
+                      id="today-schedule"
+                      class="space-y-2 text-sm text-muted"
+                    >
+                      Loading…
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recent Student Activity -->
+                <div
+                  class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                  style="animation-delay: 0.35s"
+                >
+                  <div class="flex items-center justify-between mb-4">
+                    <h3
+                      class="font-semibold text-navy"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      My Students – Quick View
+                    </h3>
+                    <button
+                      onclick="activate('students')"
+                      class="text-xs text-primary font-semibold hover:underline"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-2 text-xs text-muted font-semibold"
+                          >
+                            Student
+                          </th>
+                          <th
+                            class="text-left pb-2 text-xs text-muted font-semibold"
+                          >
+                            Adm No.
+                          </th>
+                          <th
+                            class="pb-2 text-xs text-muted font-semibold text-center"
+                          >
+                            Attendance
+                          </th>
+                          <th
+                            class="pb-2 text-xs text-muted font-semibold text-right"
+                          >
+                            Fees Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="dash-students-table">
+                        <tr>
+                          <td
+                            colspan="4"
+                            class="py-4 text-center text-muted text-xs"
+                          >
+                            Loading students…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PROFILE VIEW -->
+              <div id="view-profile" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-6 anim">
+                  <div class="flex items-center gap-5 mb-6">
+                    <div
+                      id="profile-avatar-large"
+                      class="w-16 h-16 rounded-[1.2rem] bg-gradient-to-br from-[#2A8F62] to-[#1E6B4A] text-white grid place-items-center font-bold text-2xl shadow-lg"
+                    >
+                      T
+                    </div>
+                    <div>
+                      <div
+                        id="profile-name-large"
+                        class="text-xl font-semibold"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Loading…
+                      </div>
+                      <div
+                        id="profile-role-large"
+                        class="text-sm text-muted mt-1"
+                      >
+                        Class Teacher
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-3">
+                      <div
+                        class="flex justify-between items-center py-2 border-b border-slate-100"
+                      >
+                        <span
+                          class="text-xs text-muted font-semibold uppercase tracking-wide"
+                          >Email</span
+                        ><span id="profile-email" class="text-sm font-medium"
+                          >—</span
+                        >
+                      </div>
+                      <div
+                        class="flex justify-between items-center py-2 border-b border-slate-100"
+                      >
+                        <span
+                          class="text-xs text-muted font-semibold uppercase tracking-wide"
+                          >Employee ID</span
+                        ><span id="profile-empid" class="text-sm font-medium"
+                          >—</span
+                        >
+                      </div>
+                      <div
+                        class="flex justify-between items-center py-2 border-b border-slate-100"
+                      >
+                        <span
+                          class="text-xs text-muted font-semibold uppercase tracking-wide"
+                          >Subject</span
+                        ><span id="profile-subject" class="text-sm font-medium"
+                          >—</span
+                        >
+                      </div>
+                    </div>
+                    <div class="space-y-3">
+                      <div
+                        class="flex justify-between items-center py-2 border-b border-slate-100"
+                      >
+                        <span
+                          class="text-xs text-muted font-semibold uppercase tracking-wide"
+                          >Class Assigned</span
+                        ><span id="profile-class" class="text-sm font-medium"
+                          >—</span
+                        >
+                      </div>
+                      <div
+                        class="flex justify-between items-center py-2 border-b border-slate-100"
+                      >
+                        <span
+                          class="text-xs text-muted font-semibold uppercase tracking-wide"
+                          >Phone</span
+                        ><span id="profile-phone" class="text-sm font-medium"
+                          >—</span
+                        >
+                      </div>
+                      <div
+                        class="flex justify-between items-center py-2 border-b border-slate-100"
+                      >
+                        <span
+                          class="text-xs text-muted font-semibold uppercase tracking-wide"
+                          >Joined</span
+                        ><span id="profile-joined" class="text-sm font-medium"
+                          >—</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MY STUDENTS -->
+              <div id="view-students" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-5"
+                  >
+                    <h3
+                      class="font-semibold text-navy flex-1"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      My Students
+                    </h3>
+                    <div class="relative">
+                      <svg
+                        viewBox="0 0 24 24"
+                        class="w-4 h-4 fill-none stroke-current stroke-[2] text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M21 21l-4.35-4.35"
+                        />
+                      </svg>
+                      <input
+                        id="student-search"
+                        type="text"
+                        placeholder="Search student…"
+                        oninput="filterStudents()"
+                        class="pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm w-64 bg-slate-50"
+                      />
+                    </div>
+                    <button
+                      onclick="openAddStudentModal()"
+                      class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow flex items-center gap-2"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Add Student
+                    </button>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Student
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Adm No.
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            Attendance
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="students-table">
+                        <tr>
+                          <td
+                            colspan="5"
+                            class="py-6 text-center text-muted text-xs"
+                          >
+                            Loading students…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- GRADE ENTRY -->
+              <div id="view-grades" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-5"
+                  >
+                    <h3
+                      class="font-semibold text-navy flex-1"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Grade Entry
+                    </h3>
+                    <div class="flex gap-2 flex-wrap">
+                      <select
+                        id="grade-class-filter"
+                        onchange="loadGradeEntry()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Classes</option>
+                      </select>
+                      <select
+                        id="grade-term-filter"
+                        onchange="loadGradeEntry()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="term1">Term 1</option>
+                        <option value="term2" selected>Term 2</option>
+                        <option value="term3">Term 3</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="grade-entry-table-wrap" class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b" id="grade-table-header">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Student
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            ENG
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            MATH
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            SCI
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            SOC
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            KISW
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            ART
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            PE
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            CRE
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            AGRI
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="grade-entry-table">
+                        <tr>
+                          <td
+                            colspan="8"
+                            class="py-6 text-center text-muted text-xs"
+                          >
+                            Select class and subject above
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ATTENDANCE MANAGEMENT -->
+              <div id="view-attendance-mgmt" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-5"
+                  >
+                    <h3
+                      class="font-semibold text-navy flex-1"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Mark Attendance
+                    </h3>
+                    <div class="flex gap-2 flex-wrap items-center">
+                      <input
+                        type="date"
+                        id="att-date"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      />
+                      <select
+                        id="att-class-filter"
+                        onchange="loadAttendanceSheet()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">Select Class</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="attendance-sheet">
+                    <div class="text-center text-sm text-muted py-8">
+                      Select a class and date to mark attendance
+                    </div>
+                  </div>
+                  <div
+                    id="attendance-submit-wrap"
+                    class="hidden mt-4 flex justify-end"
+                  >
+                    <button
+                      onclick="saveAttendance()"
+                      class="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                    >
+                      Save Attendance
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FINANCE MANAGER -->
+              <div id="view-finance" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-2"
+                  >
+                    <div class="flex-1">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Finance Manager
+                      </h3>
+                      <p class="text-xs text-muted mt-0.5">
+                        Update student fee records — changes reflect instantly
+                        in the student portal.
+                      </p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                      <select
+                        id="finance-class-filter"
+                        onchange="loadFinanceTable()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Classes</option>
+                      </select>
+                      <select
+                        id="finance-status-filter"
+                        onchange="filterFinanceTable()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Status</option>
+                        <option value="paid">Fully Paid</option>
+                        <option value="partial">Partial</option>
+                        <option value="unpaid">Unpaid</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Summary Strips -->
+                  <div class="grid grid-cols-3 gap-3 my-4" id="finance-summary">
+                    <div class="rounded-2xl bg-softGreen p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Total Collected</div>
+                      <div
+                        id="fin-collected"
+                        class="font-bold text-success text-lg"
+                      >
+                        KES 0
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-softYellow p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Outstanding</div>
+                      <div
+                        id="fin-outstanding"
+                        class="font-bold text-warning text-lg"
+                      >
+                        KES 0
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-softBlue p-3 text-center">
+                      <div class="text-xs text-muted mb-1">
+                        Students Cleared
+                      </div>
+                      <div
+                        id="fin-cleared"
+                        class="font-bold text-[#5B5EF7] text-lg"
+                      >
+                        0
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Student
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Total Fee
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Paid
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Balance
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            Status
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="finance-table">
+                        <tr>
+                          <td
+                            colspan="7"
+                            class="py-6 text-center text-muted text-xs"
+                          >
+                            Loading finance data…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TIMETABLE EDITOR -->
+              <div id="view-timetable" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-2"
+                  >
+                    <div class="flex-1">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Timetable Editor
+                      </h3>
+                      <p class="text-xs text-muted mt-0.5">
+                        Edit the class timetable — students will see updates
+                        instantly in their portal.
+                      </p>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                      <select
+                        id="tt-class-select"
+                        onchange="loadTimetableEditor()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">Select Class</option>
+                      </select>
+                      <button
+                        onclick="saveTimetable()"
+                        id="tt-save-btn"
+                        class="hidden px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        Push to Students
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="text-xs text-muted bg-primarySoft rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      class="w-4 h-4 fill-none stroke-current stroke-[2] text-primary flex-shrink-0"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 8v4M12 16h.01"
+                      />
+                    </svg>
+                    Click any cell to change the subject. Press
+                    <b class="text-navy mx-1">"Push to Students"</b> to save
+                    changes to Firestore.
+                  </div>
+                  <div id="timetable-editor-wrap" class="overflow-x-auto">
+                    <div class="text-center text-sm text-muted py-8">
+                      Select a class to load the timetable
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- POST NOTICE -->
+              <div id="view-notices" class="view space-y-4">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <h3
+                      class="font-semibold text-navy mb-5"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Post a Notice
+                    </h3>
+                    <div class="space-y-4">
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Notice Title</label
+                        >
+                        <input
+                          id="notice-title"
+                          type="text"
+                          placeholder="e.g. Parent Meeting – Friday 3 PM"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-navy"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Type</label
+                        >
+                        <select
+                          id="notice-type"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-navy"
+                        >
+                          <option value="general">General</option>
+                          <option value="info">Info</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Message</label
+                        >
+                        <textarea
+                          id="notice-body"
+                          rows="4"
+                          placeholder="Write your notice here…"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-navy resize-none"
+                        ></textarea>
+                      </div>
+                      <button
+                        onclick="postNotice()"
+                        class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        Post Notice
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Recent Notices
+                    </h3>
+                    <div id="recent-notices" class="space-y-3 text-sm">
+                      <div class="text-xs text-muted text-center py-4">
+                        No notices yet
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- end flex-1 -->
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // ── FIREBASE ──────────────────────────────────────────────────
+      import {
+        initializeApp,
+        deleteApp,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        signOut,
+        createUserWithEmailAndPassword,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        getDocs,
+        setDoc,
+        updateDoc,
+        addDoc,
+        collection,
+        query,
+        where,
+        orderBy,
+        serverTimestamp,
+        Timestamp,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      // ── CONFIG — replace with your firebase-config or import from firebase-config.js ──
+      // import { auth, db } from "./firebase-config.js";  // Uncomment if using separate config file
+      const firebaseConfig = {
+        // YOUR FIREBASE CONFIG HERE — or use: import { auth, db } from "./firebase-config.js";
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+      };
+
+      let app, auth, db;
+      try {
+        // Try to import from shared config first
+        const cfg = await import("./firebase-config.js").catch(() => null);
+        if (cfg) {
+          auth = cfg.auth;
+          db = cfg.db;
+        } else {
+          app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+        }
+      } catch (e) {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+      }
+
+      // ── STATE ──────────────────────────────────────────────────────
+      let TEACHER = {};
+      let ALL_STUDENTS = [];
+      let FINANCE_DATA = [];
+      let TIMETABLE_DRAFT = {};
+      let NOTICES = [];
+      let ATTENDANCE_DRAFT = {};
+      let editingFinanceUID = null;
+      let editingTTCell = null;
+
+      const SUBJECTS = [
+        "English",
+        "Mathematics",
+        "Science",
+        "Social Studies",
+        "Kiswahili",
+        "Creative Arts",
+        "P.E.",
+        "BREAK",
+        "CRE",
+        "Agriculture",
+      ];
+      const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+      const TIMES = [
+        "7:30–8:10",
+        "8:10–8:50",
+        "8:50–9:30",
+        "9:30–10:10",
+        "10:10–10:30",
+        "10:30–11:10",
+        "11:10–11:50",
+        "11:50–12:30",
+        "12:30–1:10",
+        "1:10–2:00",
+        "2:00–2:40",
+        "2:40–3:20",
+      ];
+      const SUBJECT_COLORS = {
+        English: "bg-softBlue text-[#3b4fbe]",
+        Mathematics: "bg-softGreen text-success",
+        Science: "bg-softYellow text-[#9C6012]",
+        "Social Studies": "bg-softPurple text-[#6D4CC4]",
+        Kiswahili: "bg-softPink text-danger",
+        "Creative Arts": "bg-softYellow text-warning",
+        "P.E.": "bg-softTeal text-primary",
+        BREAK: "bg-slate-100 text-slate-400",
+        CRE: "bg-softPurple text-[#6D4CC4]",
+        Agriculture: "bg-softGreen text-primary",
+        "—": "bg-slate-50 text-slate-300",
+        "": "bg-slate-50 text-slate-300",
+      };
+
+      // ── HELPERS ───────────────────────────────────────────────────
+      function showLoad(msg) {
+        document.getElementById("fb-load-msg").textContent = msg || "Loading…";
+        document.getElementById("fb-loading").style.display = "flex";
+      }
+      function hideLoad() {
+        document.getElementById("fb-loading").style.display = "none";
+      }
+      function showToast(msg = "Saved successfully") {
+        const t = document.getElementById("save-toast");
+        t.textContent = "✓ " + msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+      }
+      function fmtDate(ts) {
+        if (!ts) return "—";
+        try {
+          const d = ts.toDate ? ts.toDate() : new Date(ts);
+          return d.toLocaleDateString("en-KE", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+        } catch (e) {
+          return "—";
+        }
+      }
+      function initials(name) {
+        return (name || "?")
+          .split(" ")
+          .map((w) => w[0] || "")
+          .join("")
+          .substring(0, 2)
+          .toUpperCase();
+      }
+      function gradeLabel(total) {
+        if (total >= 80) return "EE";
+        if (total >= 60) return "ME";
+        if (total >= 40) return "AE";
+        return "BE";
+      }
+      function gradeClass(g) {
+        return (
+          {
+            EE: "bg-softGreen text-success",
+            ME: "bg-softBlue text-[#3b4fbe]",
+            AE: "bg-softYellow text-[#9C6012]",
+            BE: "bg-softPink text-danger",
+          }[g] || ""
+        );
+      }
+      function feeStatus(paid, total) {
+        if (paid >= total) return "paid";
+        if (paid > 0) return "partial";
+        return "unpaid";
+      }
+      function feeStatusBadge(s) {
+        return (
+          {
+            paid: `<span class="badge badge-paid">Cleared</span>`,
+            partial: `<span class="badge badge-partial">Partial</span>`,
+            unpaid: `<span class="badge badge-unpaid">Unpaid</span>`,
+          }[s] || ""
+        );
+      }
+
+      // ── LOAD TEACHER PROFILE ──────────────────────────────────────
+      async function loadTeacherProfile(uid) {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (!snap.exists()) throw new Error("Teacher profile not found.");
+        const data = snap.data();
+
+        const foundRole = String(data.role || "")
+          .toLowerCase()
+          .trim();
+        if (foundRole !== "teacher") {
+          console.error("Auth UID:", uid, "| Firestore Role found:", data.role);
+          throw new Error(
+            `Unauthorized access: This account is registered as a "${data.role}".`,
+          );
+        }
+
+        TEACHER = { uid, ...data };
+        const name = TEACHER.full_name || TEACHER.fullName || "Teacher";
+        const cls = TEACHER.class_stream || TEACHER.classStream || "";
+        document.getElementById("sb-name").textContent = name;
+        document.getElementById("sb-meta").textContent = cls
+          ? `Class ${cls}`
+          : "Teacher";
+        document.getElementById("sb-avatar").textContent = initials(name);
+        document.getElementById("top-avatar").textContent = initials(name);
+        const h = document.getElementById("welcome-heading");
+        const hr = new Date().getHours();
+        h.textContent =
+          (hr < 12
+            ? "Good morning, "
+            : hr < 17
+              ? "Good afternoon, "
+              : "Good evening, ") +
+          name.split(" ")[0] +
+          "!";
+        // Profile view
+        document.getElementById("profile-name-large").textContent = name;
+        document.getElementById("profile-avatar-large").textContent =
+          initials(name);
+        document.getElementById("profile-role-large").textContent =
+          TEACHER.role || "Teacher";
+        document.getElementById("profile-email").textContent =
+          TEACHER.email || "—";
+        document.getElementById("profile-empid").textContent =
+          TEACHER.emp_id || TEACHER.adm_number || "—";
+        document.getElementById("profile-subject").textContent =
+          TEACHER.subject || "—";
+        document.getElementById("profile-class").textContent = cls || "—";
+        document.getElementById("profile-phone").textContent =
+          TEACHER.phone || "—";
+        document.getElementById("profile-joined").textContent =
+          TEACHER.joined || "—";
+      }
+
+      // ── LOAD ALL STUDENTS ─────────────────────────────────────────
+      async function loadAllStudents() {
+        const teacherClass = TEACHER.class_stream || TEACHER.classStream;
+        let q;
+
+        if (teacherClass && teacherClass !== "All Classes") {
+          q = query(
+            collection(db, "users"),
+            where("role", "==", "student"),
+            where("class_stream", "==", teacherClass),
+          );
+        } else {
+          q = query(collection(db, "users"), where("role", "==", "student"));
+        }
+
+        const snap = await getDocs(q);
+        const rawStudents = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+        ALL_STUDENTS = rawStudents;
+
+        // Populate class dropdowns
+        const classes = [
+          ...new Set(
+            rawStudents
+              .map((s) => s.class_stream || s.classStream)
+              .filter(Boolean),
+          ),
+        ].sort();
+        [
+          "grade-class-filter",
+          "att-class-filter",
+          "finance-class-filter",
+          "tt-class-select",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const placeholder = el.options[0];
+          el.innerHTML = "";
+          el.appendChild(placeholder);
+          classes.forEach((c) => {
+            const o = document.createElement("option");
+            o.value = c;
+            o.textContent = `Class ${c}`;
+            el.appendChild(o);
+          });
+
+          if (teacherClass && teacherClass !== "All Classes") {
+            el.value = teacherClass;
+            // Disable class switching for Class Teachers
+            if (
+              TEACHER.roleType === "Class Teacher" ||
+              TEACHER.role_type === "Class Teacher"
+            ) {
+              el.disabled = true;
+            }
+          }
+        });
+      }
+
+      // ── LOAD FINANCE DATA ─────────────────────────────────────────
+      async function loadFinanceData() {
+        FINANCE_DATA = [];
+        const teacherClass = TEACHER.class_stream || TEACHER.classStream;
+        const snap = await getDocs(collection(db, "finance"));
+        let data = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+
+        if (teacherClass && teacherClass !== "All Classes") {
+          data = data.filter((f) => f.studentClass === teacherClass);
+        }
+        FINANCE_DATA = data;
+      }
+
+      // ── LOAD NOTICES ──────────────────────────────────────────────
+      async function loadNotices() {
+        NOTICES = [];
+        try {
+          // Teachers see notices targeted at teachers (from Director)
+          const q = query(
+            collection(db, "notices"),
+            where("targetRole", "array-contains", "teacher"),
+            orderBy("createdAt", "desc"),
+          );
+          const snap = await getDocs(q);
+          const combined = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+          // Teachers also see notices they themselves posted (targeted at their students)
+          const teacherName =
+            TEACHER.full_name || TEACHER.fullName || "Teacher";
+          const qOwn = query(
+            collection(db, "notices"),
+            where("postedByRole", "==", "Teacher"),
+            where("postedBy", "==", teacherName),
+            orderBy("createdAt", "desc"),
+          );
+          const snapOwn = await getDocs(qOwn);
+          snapOwn.forEach((d) => {
+            if (!combined.find((n) => n.id === d.id))
+              combined.push({ id: d.id, ...d.data() });
+          });
+
+          combined.sort(
+            (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+          );
+          NOTICES = combined;
+        } catch (e) {
+          console.log("Notices:", e);
+        }
+      }
+
+      // ── DASHBOARD ────────────────────────────────────────────────
+      function renderDashboard() {
+        document.getElementById("stat-students").textContent =
+          ALL_STUDENTS.length || "0";
+        // Attendance today
+        const today = new Date().toISOString().split("T")[0];
+        let present = 0,
+          absent = 0;
+        ALL_STUDENTS.forEach((s) => {
+          const att = ATTENDANCE_DRAFT[s.uid] || s.todayAttendance;
+          if (att === "present") present++;
+          else if (att === "absent") absent++;
+        });
+        document.getElementById("stat-present").textContent = present;
+        document.getElementById("stat-absent").textContent = absent;
+        // Finance outstanding
+        let outstanding = 0;
+        FINANCE_DATA.forEach((f) => {
+          outstanding += Math.max(
+            0,
+            (f.termly_total || 0) - (f.total_paid || 0),
+          );
+        });
+        document.getElementById("stat-outstanding").textContent =
+          "KES " + (outstanding || 0).toLocaleString();
+        // Quick student table
+        const tbody = document.getElementById("dash-students-table");
+        const students = ALL_STUDENTS.slice(0, 6);
+        if (!students.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="4" class="py-4 text-center text-muted text-xs">No students found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = students
+          .map((s) => {
+            const fd = FINANCE_DATA.find((f) => f.uid === s.uid) || {};
+            const balance = Math.max(
+              0,
+              (fd.termly_total || 0) - (fd.total_paid || 0), // Already correct
+            );
+            const status = feeStatus(fd.total_paid || 0, fd.termly_total || 1); // Already correct
+            return `<tr class="border-b last:border-0 hover:bg-slate-50 transition">
+      <td class="py-3 font-medium">${s.full_name || s.fullName || "—"}</td>
+      <td class="py-3 text-xs text-muted">${s.adm_number || "—"}</td>
+      <td class="py-3 text-center"><span class="text-xs ${status === "present" ? "text-success" : "text-muted"}">${s.todayAttendance || "—"}</span></td>
+      <td class="py-3 text-right">${feeStatusBadge(status)}</td>
+    </tr>`;
+          })
+          .join("");
+        // Today's schedule
+        renderTodaySchedule();
+      }
+
+      function renderTodaySchedule() {
+        const el = document.getElementById("today-schedule");
+        const day = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ][new Date().getDay()];
+        const classId = TEACHER.class_stream || TEACHER.classStream;
+        if (!classId) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-4">No class assigned</div>';
+          return;
+        }
+        const tt = TIMETABLE_DRAFT[classId] || [];
+        const todaySlots = tt.filter(
+          (slot) => slot[day] && slot[day] !== "—" && slot[day] !== "",
+        );
+        if (!todaySlots.length) {
+          el.innerHTML = `<div class="text-xs text-muted text-center py-4">${DAYS.includes(day) ? "No periods today" : "Weekend — no school"}</div>`;
+          return;
+        }
+        el.innerHTML = todaySlots
+          .slice(0, 5)
+          .map((slot) => {
+            const sub = slot[day];
+            const cls = (SUBJECT_COLORS[sub] || "bg-slate-100 text-slate-600")
+              .replace("bg-", "")
+              .replace(" text-", " ");
+            return `<div class="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+      <span class="text-xs text-muted w-20 shrink-0">${slot.time || "—"}</span>
+      <span class="px-2.5 py-1 rounded-xl text-xs font-semibold ${SUBJECT_COLORS[sub] || "bg-slate-100 text-slate-600"}">${sub}</span>
+    </div>`;
+          })
+          .join("");
+      }
+
+      // ── STUDENTS TABLE ────────────────────────────────────────────
+      window.filterStudents = function () {
+        const q = document.getElementById("student-search").value.toLowerCase();
+        renderStudentsTable(
+          ALL_STUDENTS.filter(
+            (s) =>
+              (s.full_name || s.fullName || "").toLowerCase().includes(q) ||
+              (s.adm_number || "").toLowerCase().includes(q),
+          ),
+        );
+      };
+      function renderStudentsTable(students) {
+        const tbody = document.getElementById("students-table");
+        if (!students || !students.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="py-6 text-center text-muted text-xs">No students found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = students
+          .map((s) => {
+            const cls = s.class_stream || s.classStream || "—";
+            return `<tr class="border-b last:border-0 hover:bg-slate-50 transition">
+      <td class="py-3">
+        <div class="flex items-center gap-3">
+         <div class="w-8 h-8 rounded-xl bg-primarySoft text-primary grid place-items-center font-bold text-xs">${initials(s.full_name || s.fullName)}</div>
+         <div><div class="font-medium text-sm">${s.full_name || s.fullName || "—"}</div><div class="text-xs text-muted">${s.email || "—"}</div></div>
+        </div>
+      </td>
+      <td class="py-3 text-xs text-muted">${s.adm_number || "—"}</td>
+      <td class="py-3 text-xs">${cls}</td>
+      <td class="py-3 text-center text-xs text-muted">—</td>
+      <td class="py-3 text-right">
+        <button onclick="openFinanceModal('${s.uid}')" class="px-3 py-1.5 rounded-xl bg-softYellow text-warning text-xs font-semibold hover:opacity-80 transition">Fees</button>
+      </td>
+    </tr>`;
+          })
+          .join("");
+      }
+
+      // ── GRADE ENTRY ───────────────────────────────────────────────
+      window.loadGradeEntry = async function () {
+        const cls = document.getElementById("grade-class-filter").value;
+        const term = document.getElementById("grade-term-filter").value;
+        const tbody = document.getElementById("grade-entry-table");
+        if (!cls) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="py-4 text-center text-muted text-xs">Select a class first</td></tr>';
+          return;
+        }
+        const students = ALL_STUDENTS.filter(
+          (s) => (s.class_stream || s.classStream) === cls,
+        );
+        if (!students.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="py-4 text-center text-muted text-xs">No students in this class</td></tr>';
+          return;
+        }
+
+        const subjects = [
+          { id: "English", short: "ENG" },
+          { id: "Mathematics", short: "MATH" },
+          { id: "Science", short: "SCI" },
+          { id: "Social Studies", short: "SOC" },
+          { id: "Kiswahili", short: "KISW" },
+          { id: "Creative Arts", short: "ART" },
+          { id: "P.E.", short: "PE" },
+          { id: "CRE", short: "CRE" },
+          { id: "Agriculture", short: "AGRI" },
+        ];
+
+        tbody.innerHTML =
+          '<tr><td colspan="7" class="py-4 text-center text-muted text-xs">Loading grades…</td></tr>';
+        // Load existing grades
+        const gradeMap = {};
+        try {
+          for (const s of students) {
+            const snap = await getDoc(doc(db, "grades", s.uid));
+            if (snap.exists()) gradeMap[s.uid] = snap.data();
+          }
+        } catch (e) {
+          console.log("Grade load:", e);
+        }
+        tbody.innerHTML = students
+          .map((s) => {
+            const studentGrades = (gradeMap[s.uid] || {})[term] || {};
+
+            let subjectInputs = subjects
+              .map((subj) => {
+                const val = studentGrades[subj.id]?.total || "";
+                return `<td class="py-3 text-center">
+                <input type="number" min="0" max="100" value="${val}" 
+                       data-subject="${subj.id}"
+                       placeholder="—" 
+                       class="grade-input w-12 text-center px-1 py-1 rounded-lg border border-slate-200 text-sm bg-slate-50 focus:bg-white">
+              </td>`;
+              })
+              .join("");
+
+            return `<tr class="border-b last:border-0" data-uid="${s.uid}">
+      <td class="py-3 font-medium text-sm whitespace-nowrap">${s.full_name || s.fullName || "—"}</td>
+      ${subjectInputs}
+      <td class="py-3 text-right"><button onclick="saveRowGrades(this,'${s.uid}')" class="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primaryLight transition">Save</button></td>
+    </tr>`;
+          })
+          .join("");
+      };
+
+      window.saveRowGrades = async function (btn, uid) {
+        const term = document.getElementById("grade-term-filter").value;
+        const row = btn.closest("tr");
+        const inputs = row.querySelectorAll(".grade-input");
+        btn.textContent = "…";
+        btn.disabled = true;
+        try {
+          const ref = doc(db, "grades", uid);
+          const snap = await getDoc(ref);
+          const existing = snap.exists() ? snap.data() : {};
+          if (!existing[term]) existing[term] = {};
+          const teacherName =
+            TEACHER.full_name || TEACHER.fullName || "Unknown Teacher";
+
+          inputs.forEach((inp) => {
+            const subj = inp.dataset.subject;
+            const val = parseFloat(inp.value);
+
+            if (!isNaN(val)) {
+              existing[term][subj] = {
+                total: val,
+                grade: gradeLabel(val),
+                teacher_name: teacherName,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+          });
+
+          await setDoc(ref, existing, { merge: true });
+          showToast("Grades updated for student");
+        } catch (e) {
+          alert("Error saving grade: " + e.message);
+        }
+        btn.textContent = "Save";
+        btn.disabled = false;
+      };
+
+      // ── ATTENDANCE ────────────────────────────────────────────────
+      document.getElementById("att-date").value = new Date()
+        .toISOString()
+        .split("T")[0];
+      window.loadAttendanceSheet = async function () {
+        const cls = document.getElementById("att-class-filter").value;
+        const date = document.getElementById("att-date").value;
+        const el = document.getElementById("attendance-sheet");
+        const submitWrap = document.getElementById("attendance-submit-wrap");
+        if (!cls) {
+          el.innerHTML =
+            '<div class="text-center text-sm text-muted py-8">Select a class to mark attendance</div>';
+          submitWrap.classList.add("hidden");
+          return;
+        }
+        const students = ALL_STUDENTS.filter(
+          (s) => (s.class_stream || s.classStream) === cls,
+        );
+        if (!students.length) {
+          el.innerHTML =
+            '<div class="text-center text-sm text-muted py-8">No students in this class</div>';
+          submitWrap.classList.add("hidden");
+          return;
+        }
+        // Load existing
+        const attMap = {};
+        try {
+          const snap = await getDoc(doc(db, "attendance", `${cls}_${date}`));
+          if (snap.exists()) Object.assign(attMap, snap.data().records || {});
+        } catch (e) {}
+        el.innerHTML = `<div class="space-y-2">${students
+          .map((s) => {
+            const existing = attMap[s.uid] || "present";
+            return `<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-primarySoft text-primary grid place-items-center font-bold text-xs">${initials(s.full_name || s.fullName)}</div>
+        <span class="font-medium text-sm">${s.full_name || s.fullName || "—"}</span>
+      </div>
+      <div class="flex gap-2">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="att_${s.uid}" value="present" ${existing === "present" ? "checked" : ""} class="accent-[#1E6B4A]">
+          <span class="text-xs font-medium text-success">Present</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="att_${s.uid}" value="absent" ${existing === "absent" ? "checked" : ""} class="accent-danger">
+          <span class="text-xs font-medium text-danger">Absent</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="att_${s.uid}" value="late" ${existing === "late" ? "checked" : ""} class="accent-warning">
+          <span class="text-xs font-medium text-warning">Late</span>
+        </label>
+      </div>
+    </div>`;
+          })
+          .join("")}</div>`;
+        submitWrap.classList.remove("hidden");
+      };
+      window.saveAttendance = async function () {
+        const cls = document.getElementById("att-class-filter").value;
+        const date = document.getElementById("att-date").value;
+        const students = ALL_STUDENTS.filter(
+          (s) => (s.class_stream || s.classStream) === cls,
+        );
+        const records = {};
+        students.forEach((s) => {
+          const sel = document.querySelector(
+            `input[name="att_${s.uid}"]:checked`,
+          );
+          if (sel) records[s.uid] = sel.value;
+        });
+        try {
+          await setDoc(doc(db, "attendance", `${cls}_${date}`), {
+            classId: cls,
+            date,
+            records,
+            markedBy: TEACHER.uid,
+            markedAt: serverTimestamp(),
+          });
+          showToast("Attendance saved for " + date);
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      // ── FINANCE MANAGER ───────────────────────────────────────────
+      window.loadFinanceTable = async function () {
+        const cls = document.getElementById("finance-class-filter").value;
+        document.getElementById("finance-table").innerHTML =
+          '<tr><td colspan="7" class="py-4 text-center text-muted text-xs">Loading…</td></tr>';
+        try {
+          let q = query(collection(db, "finance"));
+          const snap = await getDocs(q);
+          let data = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+
+          const teacherClass = TEACHER.class_stream || TEACHER.classStream;
+          if (teacherClass && teacherClass !== "All Classes") {
+            data = data.filter((f) => f.studentClass === teacherClass);
+          }
+          FINANCE_DATA = data;
+
+          filterFinanceTable();
+        } catch (e) {
+          document.getElementById("finance-table").innerHTML =
+            `<tr><td colspan="7" class="py-4 text-center text-muted text-xs">Error: ${e.message}</td></tr>`;
+        }
+      };
+      window.filterFinanceTable = function () {
+        const cls = document.getElementById("finance-class-filter").value;
+        const statusF = document.getElementById("finance-status-filter").value;
+        let data = FINANCE_DATA;
+        if (cls) {
+          const clsStudents = new Set(
+            ALL_STUDENTS.filter(
+              (s) => (s.class_stream || s.classStream) === cls,
+            ).map((s) => s.uid),
+          );
+          data = data.filter((f) => clsStudents.has(f.uid));
+        }
+        if (statusF)
+          data = data.filter(
+            (f) => feeStatus(f.total_paid || 0, f.termly_total || 1) === statusF, // Already correct
+          );
+        renderFinanceTable(data);
+      };
+      function renderFinanceTable(data) {
+        const tbody = document.getElementById("finance-table");
+        if (!data.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="py-6 text-center text-muted text-xs">No finance records found</td></tr>';
+          return;
+        }
+        let totalCollected = 0,
+          totalOutstanding = 0,
+          cleared = 0;
+        data.forEach((f) => {
+          totalCollected += f.total_paid || 0; // Already correct
+          totalOutstanding += Math.max(
+            0,
+            (f.termly_total || 0) - (f.total_paid || 0), // Already correct
+          );
+          if ((f.total_paid || 0) >= (f.termly_total || 1)) cleared++; // Already correct
+        });
+        document.getElementById("fin-collected").textContent =
+          "KES " + totalCollected.toLocaleString();
+        document.getElementById("fin-outstanding").textContent =
+          "KES " + totalOutstanding.toLocaleString();
+        document.getElementById("fin-cleared").textContent = cleared;
+        tbody.innerHTML = data
+          .map((f) => {
+            const student = ALL_STUDENTS.find((s) => s.uid === f.uid) || {};
+            const name =
+              student.full_name ||
+              student.fullName ||
+              f.studentName ||
+              "Unknown";
+            const cls = student.class_stream || student.classStream || "—";
+            const total = f.termly_total || 0; // Already correct
+            const paid = f.total_paid || 0; // Already correct
+            const balance = Math.max(0, total - paid);
+            const status = feeStatus(paid, total || 1);
+            return `<tr class="border-b last:border-0 fee-row">
+      <td class="py-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-primarySoft text-primary grid place-items-center text-xs font-bold">${initials(name)}</div>
+          <span class="font-medium text-sm">${name}</span>
+        </div>
+      </td>
+      <td class="py-3 text-xs text-muted">${cls}</td>
+      <td class="py-3 text-right text-sm font-medium">KES ${total.toLocaleString()}</td>
+      <td class="py-3 text-right text-sm text-success font-semibold">KES ${paid.toLocaleString()}</td>
+      <td class="py-3 text-right text-sm font-semibold ${balance > 0 ? "text-danger" : "text-success"}">KES ${balance.toLocaleString()}</td>
+      <td class="py-3 text-center">${feeStatusBadge(status)}</td>
+      <td class="py-3 text-right">
+        <button onclick="openFinanceModal('${f.uid}')" class="px-3 py-1.5 rounded-xl bg-primarySoft text-primary text-xs font-semibold hover:bg-green-100 transition">Edit</button>
+      </td>
+    </tr>`;
+          })
+          .join("");
+      }
+
+      window.openFinanceModal = async function (uid) {
+        editingFinanceUID = uid;
+        const student = ALL_STUDENTS.find((s) => s.uid === uid) || {};
+        const name = student.full_name || student.fullName || "Unknown";
+        document.getElementById("finance-modal").classList.add("open");
+        const body = document.getElementById("finance-modal-body");
+        body.innerHTML =
+          '<div class="text-center text-muted text-sm py-4">Loading…</div>';
+        let fd = { // Use schema-defined field names
+          termly_total: 0, 
+          total_paid: 0, 
+          payment_history: [], 
+          feeBreakdown: [] 
+        };
+        try {
+          const snap = await getDoc(doc(db, "finance", uid));
+          if (snap.exists()) fd = { ...fd, ...snap.data() };
+        } catch (e) {}
+        const balance = Math.max(
+          0,
+          (fd.termly_total || 0) - (fd.total_paid || 0), // Already correct
+        );
+        body.innerHTML = `
+    <div class="flex items-center gap-3 mb-5 pb-4 border-b">
+      <div class="w-10 h-10 rounded-xl bg-primarySoft text-primary grid place-items-center font-bold">${initials(name)}</div>
+      <div><div class="font-semibold">${name}</div><div class="text-xs text-muted">${student.adm_number || "—"} · Class ${student.class_stream || student.classStream || "—"}</div></div>
+    </div>
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="text-center p-3 bg-slate-50 rounded-xl"><div class="text-xs text-muted mb-1">Total Fee</div><div class="font-bold text-navy" id="fm-total-disp">KES ${(fd.termly_total || 0).toLocaleString()}</div></div> <!-- Already correct -->
+      <div class="text-center p-3 bg-softGreen rounded-xl"><div class="text-xs text-muted mb-1">Amount Paid</div><div class="font-bold text-success" id="fm-paid-disp">KES ${(fd.total_paid || 0).toLocaleString()}</div></div> <!-- Already correct -->
+      <div class="text-center p-3 bg-softPink rounded-xl"><div class="text-xs text-muted mb-1">Balance</div><div class="font-bold text-danger" id="fm-bal-disp">KES ${balance.toLocaleString()}</div></div>
+    </div>
+    <div class="space-y-3 mb-5">
+      <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">Total Fee (KES)</label> <!-- Changed id to fm-termly-total -->
+        <input id="fm-termly-total" type="number" value="${fd.termly_total || 0}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+      </div>
+      <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">Amount Paid (KES)</label> <!-- Changed id to fm-total-paid -->
+        <input id="fm-total-paid" type="number" value="${fd.total_paid || 0}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+      </div>
+      <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">Payment Mode</label>
+        <select id="fm-mode" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 text-navy">
+          <option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option>
+        </select>
+      </div>
+      <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">Reference / Receipt No.</label>
+        <input id="fm-ref" type="text" placeholder="e.g. QEF123456" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+      </div>
+      <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1">Notes (optional)</label>
+        <textarea id="fm-notes" rows="2" placeholder="Additional notes…" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 resize-none"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="saveFinance()" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow">Save to Firestore</button>
+      <button onclick="closeFinanceModal()" class="px-5 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition">Cancel</button>
+    </div>
+    ${ // Already correct
+      fd.payment_history && fd.payment_history.length 
+        ? `<div class="mt-5 border-t pt-4"><div class="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Payment History</div> 
+    ${fd.payment_history.map((p) => `<div class="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0 text-xs"><span>${fmtDate(p.date) || "—"}</span><span class="text-muted">${p.mode || "—"}</span><span class="font-semibold text-success">+KES ${(p.amount || 0).toLocaleString()}</span></div>`).join("")}</div>` 
+        : "" 
+    } 
+  `;
+      };
+      window.closeFinanceModal = function () {
+        document.getElementById("finance-modal").classList.remove("open");
+        editingFinanceUID = null;
+      };
+      window.saveFinance = async function () {
+        const uid = editingFinanceUID;
+        if (!uid) return;
+        const termlyTotal = // Changed to termly_total
+          parseFloat(document.getElementById("fm-termly-total").value) || 0;
+        const totalPaid = // Changed to total_paid
+          parseFloat(document.getElementById("fm-total-paid").value) || 0;
+        const mode = document.getElementById("fm-mode").value;
+        const ref = document.getElementById("fm-ref").value;
+        const notes = document.getElementById("fm-notes").value;
+        const student = ALL_STUDENTS.find((s) => s.uid === uid) || {};
+        const name = student.full_name || student.fullName || "";
+        const balance = Math.max(0, termlyTotal - totalPaid); // Use new field names
+        const status = feeStatus(totalPaid, termlyTotal || 1); // Use new field names
+        const paymentEntry = {
+          date: new Date(), // Save as Date object for student portal
+          mode,
+          ref,
+          amount: totalPaid, // Amount of this payment
+          notes,
+          addedBy: TEACHER.uid,
+          addedAt: new Date().toISOString(),
+        };
+        try {
+          const snap = await getDoc(doc(db, "finance", uid));
+          const existing = snap.exists()
+            ? snap.data()
+            : { payment_history: [], feeBreakdown: [] }; // Use schema-defined field names
+          const paymentHistory = existing.payment_history || []; // Use schema-defined field names
+          if (ref) paymentHistory.push(paymentEntry); // Add to history
+          await setDoc(doc(db, "finance", uid), {
+            uid,
+            studentName: name,
+            studentClass: student.class_stream || student.classStream || "",
+            termly_total: termlyTotal, // Use new field names
+            total_paid: totalPaid, // Use new field names
+            balance,
+            status,
+            payment_history: paymentHistory, // Use new field names
+            feeBreakdown: [
+              { label: "Tuition Fee", amount: Math.round(termlyTotal * 0.6) }, // Use new field names
+              { label: "Activity Fee", amount: Math.round(termlyTotal * 0.15) }, // Use new field names
+              { label: "Lunch", amount: Math.round(termlyTotal * 0.15) }, // Use new field names
+              { label: "Exam Fee", amount: Math.round(termlyTotal * 0.1) }, // Use new field names
+              { label: "Total Paid", amount: totalPaid }, // Use new field names
+              { label: "Balance", amount: balance },
+            ],
+            updatedAt: serverTimestamp(),
+            updatedBy: TEACHER.uid,
+          });
+          // Update FINANCE_DATA in memory
+          const idx = FINANCE_DATA.findIndex((f) => f.uid === uid);
+          const newRec = {
+            uid,
+            termly_total: termlyTotal, // Use new field names
+            total_paid: totalPaid, // Use new field names
+            balance,
+            status,
+            payment_history: paymentHistory, // Use new field names
+          };
+          if (idx >= 0) FINANCE_DATA[idx] = newRec;
+          else FINANCE_DATA.push(newRec);
+          closeFinanceModal();
+          showToast("Finance updated for " + name);
+          filterFinanceTable();
+        } catch (e) {
+          alert("Error saving finance: " + e.message);
+        }
+      };
+
+      // ── TIMETABLE EDITOR ──────────────────────────────────────────
+      const DEFAULT_TT = [
+        {
+          time: "7:30–8:10",
+          Monday: "English",
+          Tuesday: "Mathematics",
+          Wednesday: "Science",
+          Thursday: "Social Studies",
+          Friday: "English",
+        },
+        {
+          time: "8:10–8:50",
+          Monday: "Mathematics",
+          Tuesday: "English",
+          Wednesday: "Kiswahili",
+          Thursday: "Mathematics",
+          Friday: "Mathematics",
+        },
+        {
+          time: "8:50–9:30",
+          Monday: "Science",
+          Tuesday: "Kiswahili",
+          Wednesday: "English",
+          Thursday: "English",
+          Friday: "Science",
+        },
+        {
+          time: "9:30–10:10",
+          Monday: "Social Studies",
+          Tuesday: "Science",
+          Wednesday: "Mathematics",
+          Thursday: "Creative Arts",
+          Friday: "Social Studies",
+        },
+        {
+          time: "10:10–10:30",
+          Monday: "BREAK",
+          Tuesday: "BREAK",
+          Wednesday: "BREAK",
+          Thursday: "BREAK",
+          Friday: "BREAK",
+        },
+        {
+          time: "10:30–11:10",
+          Monday: "Kiswahili",
+          Tuesday: "Social Studies",
+          Wednesday: "Creative Arts",
+          Thursday: "Science",
+          Friday: "Kiswahili",
+        },
+        {
+          time: "11:10–11:50",
+          Monday: "Creative Arts",
+          Tuesday: "Creative Arts",
+          Wednesday: "Social Studies",
+          Thursday: "Kiswahili",
+          Friday: "P.E.",
+        },
+        {
+          time: "11:50–12:30",
+          Monday: "P.E.",
+          Tuesday: "P.E.",
+          Wednesday: "P.E.",
+          Thursday: "P.E.",
+          Friday: "CRE",
+        },
+        {
+          time: "12:30–1:10",
+          Monday: "CRE",
+          Tuesday: "CRE",
+          Wednesday: "CRE",
+          Thursday: "CRE",
+          Friday: "Mathematics",
+        },
+      ];
+      window.loadTimetableEditor = async function () {
+        const cls = document.getElementById("tt-class-select").value;
+        const wrap = document.getElementById("timetable-editor-wrap");
+        const saveBtn = document.getElementById("tt-save-btn");
+        if (!cls) {
+          wrap.innerHTML =
+            '<div class="text-center text-sm text-muted py-8">Select a class to load the timetable</div>';
+          saveBtn.classList.add("hidden");
+          return;
+        }
+        wrap.innerHTML =
+          '<div class="text-center text-sm text-muted py-8">Loading timetable…</div>';
+        let ttData = [...DEFAULT_TT.map((r) => ({ ...r }))];
+        try {
+          const snap = await getDoc(doc(db, "classes", cls));
+          if (snap.exists() && snap.data().timetable)
+            ttData = snap.data().timetable;
+        } catch (e) {}
+        TIMETABLE_DRAFT[cls] = ttData;
+        renderTimetableEditor(cls);
+        saveBtn.classList.remove("hidden");
+      };
+      function renderTimetableEditor(cls) {
+        const ttData = TIMETABLE_DRAFT[cls] || [];
+        const wrap = document.getElementById("timetable-editor-wrap");
+        wrap.innerHTML = `<table class="w-full text-sm border-collapse">
+    <thead><tr>
+      <th class="text-left pb-3 pr-4 text-xs text-muted font-semibold whitespace-nowrap">Time</th>
+      ${DAYS.map((d) => `<th class="pb-3 px-2 text-xs text-muted font-semibold text-center">${d}</th>`).join("")}
+    </tr></thead>
+    <tbody>
+      ${ttData
+        .map(
+          (row, ri) => `<tr class="border-b border-slate-100 last:border-0">
+        <td class="py-2 pr-4 text-xs font-semibold text-muted whitespace-nowrap">${row.time || "—"}</td>
+        ${DAYS.map((d) => {
+          const cell = row[d];
+          const sub =
+            typeof cell === "object" && cell
+              ? cell.subject || "—"
+              : cell || "—";
+          const cls2 = SUBJECT_COLORS[sub] || "bg-slate-50 text-slate-400";
+          return `<td class="py-1.5 px-1 text-center">
+            <div class="tt-cell ${cls2} text-center" onclick="openTTModal('${cls}',${ri},'${d}')">${sub}</div>
+          </td>`;
+        }).join("")}
+      </tr>`,
+        )
+        .join("")}
+    </tbody>
+  </table>`;
+      }
+      window.openTTModal = function (classId, rowIndex, day) {
+        editingTTCell = { classId, rowIndex, day };
+        const currentCell =
+          (TIMETABLE_DRAFT[classId] || [])[rowIndex]?.[day] || null;
+        const current =
+          typeof currentCell === "object" && currentCell
+            ? currentCell.subject || "—"
+            : currentCell || "—";
+        document.getElementById("tt-modal").classList.add("open");
+        document.getElementById("tt-modal-body").innerHTML = `
+    <p class="text-sm text-muted mb-4">Editing <b class="text-navy">${day}</b> — <b class="text-navy">${(TIMETABLE_DRAFT[classId] || [])[rowIndex]?.time || ""}</b></p>
+    <div class="grid grid-cols-3 gap-2 mb-5">
+      ${SUBJECTS.map((s) => `<button onclick="selectSubject('${s}')" class="py-2 px-3 rounded-xl text-xs font-semibold transition border-2 ${s === current ? "border-primary bg-primarySoft text-primary" : "border-slate-100 bg-slate-50 text-slate-600 hover:border-primary hover:bg-primarySoft"}">${s}</button>`).join("")}
+    </div>
+    <p class="text-xs text-muted">Or type a custom subject:</p>
+    <div class="flex gap-2 mt-2">
+      <input id="tt-custom-subj" type="text" value="${current === "—" ? "" : current}" placeholder="Custom subject name…" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50">
+      <button onclick="applyTTEdit()" class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition">Apply</button>
+    </div>
+  `;
+      };
+      window.selectSubject = function (sub) {
+        document.getElementById("tt-custom-subj").value = sub;
+        document
+          .querySelectorAll("#tt-modal-body button")
+          .forEach((b) =>
+            b.classList.remove(
+              "border-primary",
+              "bg-primarySoft",
+              "text-primary",
+            ),
+          );
+        event.target.classList.add(
+          "border-primary",
+          "bg-primarySoft",
+          "text-primary",
+        );
+      };
+      window.applyTTEdit = function () {
+        if (!editingTTCell) return;
+        const { classId, rowIndex, day } = editingTTCell;
+        const val =
+          document.getElementById("tt-custom-subj").value.trim() || "—";
+        if (TIMETABLE_DRAFT[classId] && TIMETABLE_DRAFT[classId][rowIndex]) {
+          TIMETABLE_DRAFT[classId][rowIndex][day] = val;
+        }
+        closeTTModal();
+        renderTimetableEditor(classId);
+      };
+      window.closeTTModal = function () {
+        document.getElementById("tt-modal").classList.remove("open");
+        editingTTCell = null;
+      };
+      window.saveTimetable = async function () {
+        const cls = document.getElementById("tt-class-select").value;
+        if (!cls) return;
+        const ttData = TIMETABLE_DRAFT[cls];
+        if (!ttData) {
+          alert("No timetable data to save.");
+          return;
+        }
+        const clsId = cls.replace(/\s+/g, "");
+        try {
+          await setDoc(
+            doc(db, "classes", clsId),
+            {
+              classId: cls,
+              timetable: ttData,
+              updatedAt: serverTimestamp(),
+              updatedBy: TEACHER.uid,
+            },
+            { merge: true },
+          );
+          showToast("Timetable pushed to students ✓");
+        } catch (e) {
+          alert("Error saving timetable: " + e.message);
+        }
+      };
+
+      // ── POST NOTICE ───────────────────────────────────────────────
+      window.postNotice = async function () {
+        const title = document.getElementById("notice-title").value.trim();
+        const body = document.getElementById("notice-body").value.trim();
+        const type = document.getElementById("notice-type").value;
+        if (!title || !body) {
+          alert("Please fill in both title and message.");
+          return;
+        }
+        try {
+          const teacherName =
+            TEACHER.full_name || TEACHER.fullName || "Teacher";
+          const teacherClass =
+            TEACHER.class_stream || TEACHER.classStream || "";
+
+          const ref = await addDoc(collection(db, "notices"), {
+            title,
+            body,
+            type,
+            postedBy: teacherName,
+            postedByRole: "Teacher",
+            targetRole: ["student"],
+            targetClass: teacherClass,
+            createdAt: serverTimestamp(),
+          });
+
+          NOTICES.unshift({
+            id: ref.id,
+            title,
+            body,
+            type,
+            postedBy: teacherName,
+            postedByRole: "Teacher",
+            createdAt: Timestamp.now(), // Mock for immediate render
+          });
+          document.getElementById("notice-title").value = "";
+          document.getElementById("notice-body").value = "";
+          renderRecentNotices();
+          showToast("Notice posted successfully");
+        } catch (e) {
+          alert("Error posting notice: " + e.message);
+        }
+      };
+      function renderRecentNotices() {
+        const el = document.getElementById("recent-notices");
+        if (!NOTICES.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-4">No notices yet</div>';
+          return;
+        }
+        const TYPE_COLORS = {
+          urgent: "bg-softPink text-danger",
+          info: "bg-softBlue text-[#3b4fbe]",
+          general: "bg-softYellow text-warning",
+        };
+        el.innerHTML = NOTICES.slice(0, 8)
+          .map(
+            (n) => `
+    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+      <div class="flex items-start gap-2 mb-2">
+        <span class="font-semibold text-sm flex-1 text-navy">${n.title}</span>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${TYPE_COLORS[n.type] || TYPE_COLORS.general}">${n.type || "general"}</span>
+      </div>
+      <div class="text-xs text-muted leading-relaxed">${n.body}</div>
+      <div class="text-[10px] text-slate-400 mt-2">${fmtDate(n.createdAt)} · From: ${n.postedBy} (${n.postedByRole})</div>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      // ── NAVIGATION ────────────────────────────────────────────────
+      window.activate = function (viewId) {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        const t = document.getElementById("view-" + viewId);
+        if (t) t.classList.add("active");
+        document.querySelectorAll(".nav-btn").forEach((b) => {
+          b.classList.remove("bg-primarySoft", "text-primary");
+          b.classList.add("hover:bg-slate-50");
+        });
+        const ab = [...document.querySelectorAll(".nav-btn")].find(
+          (b) => b.dataset.view === viewId,
+        );
+        if (ab) {
+          ab.classList.add("bg-primarySoft", "text-primary");
+          ab.classList.remove("hover:bg-slate-50");
+        }
+        localStorage.setItem("teacherPortalView", viewId);
+        // On-demand loads
+        if (viewId === "finance") loadFinanceTable();
+        if (viewId === "students") renderStudentsTable(ALL_STUDENTS);
+        if (viewId === "notices") renderRecentNotices();
+        if (viewId === "grades") loadGradeEntry();
+        if (viewId === "attendance-mgmt") loadAttendanceSheet();
+        if (viewId === "timetable") loadTimetableEditor();
+      };
+      document.querySelectorAll(".nav-btn").forEach((b) =>
+        b.addEventListener("click", () => {
+          activate(b.dataset.view);
+          closeSidebar();
+        }),
+      );
+      window.toggleSidebar = () => {
+        document.getElementById("sidebar").classList.toggle("open");
+        document.getElementById("sidebar-overlay").classList.toggle("show");
+      };
+      window.closeSidebar = () => {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebar-overlay").classList.remove("show");
+      };
+      window.handleLogout = async () => {
+        try {
+          await signOut(auth);
+          localStorage.removeItem("teacherPortalView");
+          window.location.href = "login.html";
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      // ── DATE ──────────────────────────────────────────────────────
+      document.getElementById("currentDate").textContent =
+        new Date().toLocaleDateString("en-KE", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+
+      // ── ENTRY POINT ───────────────────────────────────────────────
+      // ── ADD STUDENT FUNCTIONS ─────────────────────────────────────
+      window.openAddStudentModal = async function () {
+        const modal = document.getElementById("add-student-modal");
+        const body = document.getElementById("add-student-modal-body");
+
+        // Fixed list of classes
+        const classes = [
+          "PP1",
+          "PP2",
+          "Grade 1",
+          "Grade 2",
+          "Grade 3",
+          "Grade 4",
+          "Grade 5",
+          "Grade 6",
+          "Grade 7",
+          "Grade 8",
+          "Grade 9",
+        ];
+
+        body.innerHTML = `
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Full Name *</label>
+              <input id="new-student-fullName" type="text" required placeholder="John Doe" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Admission Number *</label>
+                <input id="new-student-admNumber" type="text" required placeholder="ADM001" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Class/Stream *</label>
+                <select id="new-student-classStream" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  <option value="">Select Class</option>
+                  ${classes.map((c) => `<option value="${c}">${c}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Gender</label>
+                <select id="new-student-gender" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Date of Birth</label>
+                <input id="new-student-dob" type="date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Parent/Guardian Name</label>
+              <input id="new-student-parentName" type="text" placeholder="Parent Name" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Parent Phone</label>
+              <input id="new-student-parentPhone" type="tel" placeholder="07XXXXXXXX" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Parent Email *</label>
+              <input id="new-student-parentEmail" type="email" required placeholder="parent@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">House</label>
+                <select id="new-student-house" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  <option value="">Select House</option>
+                  <option value="Red">Red</option>
+                  <option value="Blue">Blue</option>
+                  <option value="Green">Green</option>
+                  <option value="Yellow">Yellow</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">NEMIS ID</label>
+                <input id="new-student-nemisId" type="text" placeholder="e.g. 123456789" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Address</label>
+              <input id="new-student-address" type="text" placeholder="e.g. P.O. Box 123, Kairi" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Year Joined</label>
+              <input id="new-student-yearJoined" type="number" placeholder="e.g. 2023" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Transport Route</label>
+                <input id="new-student-transportRoute" type="text" placeholder="e.g. Kairi - Gatundu" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Transport Vehicle</label>
+                <input id="new-student-transportVehicle" type="text" placeholder="e.g. Van 1" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Transport Pickup Point</label>
+                <input id="new-student-transportPickup" type="text" placeholder="e.g. Kairi Stage" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Transport Pickup Time</label>
+                <input id="new-student-transportTime" type="text" placeholder="e.g. 6:30 AM" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20">
+              </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button onclick="saveNewStudent()" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Save Student
+              </button>
+              <button onclick="closeAddStudentModal()" class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition">Cancel</button>
+            </div>
+          </div>
+        `;
+
+        modal.classList.add("open");
+      };
+
+      window.closeAddStudentModal = function () {
+        document.getElementById("add-student-modal").classList.remove("open");
+        document.getElementById("add-student-modal-body").innerHTML =
+          '<div class="text-center text-muted text-sm py-4">Loading form...</div>';
+      };
+
+      window.saveNewStudent = async function () {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerHTML =
+          '<svg class="w-4 h-4 animate-spin mr-1" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" pathLength="1" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Saving...';
+
+        try {
+          // Get form values
+          const fullName = document
+            .getElementById("new-student-fullName")
+            .value.trim();
+          const admNumber = document
+            .getElementById("new-student-admNumber")
+            .value.trim();
+          const classStream = document
+            .getElementById("new-student-classStream")
+            .value.trim();
+          const gender = document
+            .getElementById("new-student-gender")
+            .value.trim();
+          const dob = document.getElementById("new-student-dob").value;
+          const parentName = document
+            .getElementById("new-student-parentName")
+            .value.trim();
+          const parentPhone = document
+            .getElementById("new-student-parentPhone")
+            .value.trim();
+          const parentEmail = document
+            .getElementById("new-student-parentEmail")
+            .value.trim();
+          const nemisId = document
+            .getElementById("new-student-nemisId")
+            .value.trim();
+          const address = document
+            .getElementById("new-student-address")
+            .value.trim();
+          const yearJoined =
+            parseInt(document.getElementById("new-student-yearJoined").value) ||
+            null;
+          const transportRoute = document
+            .getElementById("new-student-transportRoute")
+            .value.trim();
+          const transportVehicle = document
+            .getElementById("new-student-transportVehicle")
+            .value.trim();
+          const transportPickup = document
+            .getElementById("new-student-transportPickup")
+            .value.trim();
+          const transportTime = document
+            .getElementById("new-student-transportTime")
+            .value.trim();
+          const house = document
+            .getElementById("new-student-house")
+            .value.trim();
+
+          // Validation
+          if (!fullName || !admNumber || !classStream || !parentEmail) {
+            alert(
+              "Please fill in Full Name, Admission Number, Class/Stream, and Parent Email.",
+            );
+            return;
+          }
+
+          // Check if adm number exists
+          const existing = ALL_STUDENTS.find(
+            (s) => (s.adm_number || "").trim() === admNumber,
+          );
+          if (existing) {
+            alert("Admission number already exists!");
+            return;
+          }
+
+          const tempPassword = admNumber.toUpperCase();
+
+          // 1. Create Auth account using secondary app instance
+          const secondaryApp = initializeApp(
+            auth.app.options,
+            "SecondaryEnrollment",
+          );
+          const secondaryAuth = getAuth(secondaryApp);
+          const cred = await createUserWithEmailAndPassword(
+            secondaryAuth,
+            parentEmail,
+            tempPassword,
+          );
+          const uid = cred.user.uid;
+
+          // 2. Save to Firestore using UID
+          const studentData = {
+            fullName,
+            adm_number: admNumber,
+            class_stream: classStream,
+            role: "student",
+            createdBy: TEACHER.uid,
+            createdAt: serverTimestamp(),
+            gender: gender || "",
+            dob: dob || "",
+            parent_name: parentName || "",
+            parent_phone: parentPhone || "",
+            parent_email: parentEmail || "",
+            temp_password: tempPassword,
+            nemis_id: nemisId || "",
+            address: address || "",
+            year_joined: yearJoined,
+            transport_route: transportRoute || "",
+            transport_vehicle: transportVehicle || "",
+            transport_pickup: transportPickup || "",
+            transport_time: transportTime || "",
+            house: house || "",
+          };
+
+          await setDoc(doc(db, "users", uid), studentData);
+          await deleteApp(secondaryApp);
+
+          showToast("Student added successfully! ✓");
+          closeAddStudentModal();
+
+          // Reload students
+          await loadAllStudents();
+          if (
+            document
+              .getElementById("view-students")
+              .classList.contains("active")
+          ) {
+            renderStudentsTable(ALL_STUDENTS);
+          }
+        } catch (error) {
+          console.error("Error adding student:", error);
+          alert("Error adding student: " + error.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML =
+            '<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Save Student';
+        }
+      };
+
+      // Helper to load timetable data without full editor rendering
+      async function loadTimetableData(cls) {
+        if (!cls) return;
+        let ttData = [...DEFAULT_TT.map((r) => ({ ...r }))];
+        const clsId = cls.replace(/\s+/g, "");
+        try {
+          const snap = await getDoc(doc(db, "classes", clsId));
+          if (snap.exists() && snap.data().timetable)
+            ttData = snap.data().timetable;
+        } catch (e) {}
+        TIMETABLE_DRAFT[cls] = ttData;
+      }
+
+      // Refactor loadTimetableEditor to use the helper
+      window.loadTimetableEditor = async function () {
+        const cls = document.getElementById("tt-class-select").value;
+        const wrap = document.getElementById("timetable-editor-wrap");
+        const saveBtn = document.getElementById("tt-save-btn");
+        if (!cls) {
+          wrap.innerHTML =
+            '<div class="text-center text-sm text-muted py-8">Select a class to load the timetable</div>';
+          saveBtn.classList.add("hidden");
+          return;
+        }
+        wrap.innerHTML =
+          '<div class="text-center text-sm text-muted py-8">Loading timetable…</div>';
+        await loadTimetableData(cls);
+        renderTimetableEditor(cls);
+        saveBtn.classList.remove("hidden");
+      };
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+        showLoad("Loading Teacher Portal…");
+        try {
+          await loadTeacherProfile(user.uid);
+          showLoad("Loading students & data…");
+          await Promise.all([
+            loadAllStudents(),
+            loadFinanceData(),
+            loadNotices(),
+          ]);
+
+          // Ensure dashboard has timetable for assigned class
+          const teacherClass = TEACHER.class_stream || TEACHER.classStream;
+          if (teacherClass && teacherClass !== "All Classes") {
+            await loadTimetableData(teacherClass);
+          }
+
+          renderDashboard();
+          renderRecentNotices();
+        } catch (err) {
+          console.error(err);
+          hideLoad();
+          alert("Error loading portal: " + err.message);
+          return;
+        }
+        hideLoad();
+        activate(localStorage.getItem("teacherPortalView") || "dashboard");
+      });
+    </script>
+  </body>
+</html>

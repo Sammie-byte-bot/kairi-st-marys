@@ -1,0 +1,4563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kairi St Mary's | Director's Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bg: "#F4F6FB",
+              card: "#FFFFFF",
+              primary: "#1E6B4A",
+              primaryLight: "#2A8F62",
+              primarySoft: "#E8F5EE",
+              navy: "#23384F",
+              muted: "#6B7A90",
+              success: "#35B37E",
+              warning: "#F39C52",
+              danger: "#E86D6D",
+              softBlue: "#EDF2FF",
+              softGreen: "#EAF9F1",
+              softPink: "#FFF0F0",
+              softYellow: "#FFF7E9",
+              softPurple: "#F3EEFF",
+              softTeal: "#E8F8F5",
+              gold: "#C9A84C",
+              goldLight: "#F5E9C0",
+            },
+            boxShadow: { card: "0 10px 30px rgba(31,41,55,0.08)" },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+      .nav-btn {
+        transition: all 0.18s;
+        cursor: pointer;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .anim {
+        animation: fadeUp 0.4s ease both;
+      }
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(35, 56, 79, 0.45);
+        z-index: 90;
+      }
+      @media (max-width: 1023px) {
+        #sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.25s;
+          position: fixed;
+          z-index: 100;
+          height: 100vh;
+        }
+        #sidebar.open {
+          transform: translateX(0);
+        }
+        #sidebar-overlay.show {
+          display: block;
+        }
+      }
+      #fb-loading {
+        position: fixed;
+        inset: 0;
+        background: rgba(244, 246, 251, 0.97);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 14px;
+      }
+      @keyframes fb-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .fb-spinner {
+        width: 46px;
+        height: 46px;
+        border: 4px solid #e8f5ee;
+        border-top-color: #1e6b4a;
+        border-radius: 50%;
+        animation: fb-spin 0.75s linear infinite;
+      }
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(35, 56, 79, 0.6);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal-box {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        width: 90%;
+        max-width: 580px;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: fadeUp 0.25s ease;
+      }
+      input[type="text"],
+      input[type="number"],
+      input[type="email"],
+      input[type="tel"],
+      input[type="date"],
+      select,
+      textarea {
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #1e6b4a !important;
+        box-shadow: 0 0 0 3px rgba(30, 107, 74, 0.12);
+      }
+      .save-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #1e6b4a;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 999;
+        transform: translateY(80px);
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+      }
+      .save-toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .badge-paid {
+        background: #eaf9f1;
+        color: #1a7a50;
+      }
+      .badge-partial {
+        background: #fff7e9;
+        color: #9c6012;
+      }
+      .badge-unpaid {
+        background: #fff0f0;
+        color: #b83a3a;
+      }
+      .badge-pending {
+        background: #fff7e9;
+        color: #9c6012;
+      }
+      .badge-approved {
+        background: #eaf9f1;
+        color: #1a7a50;
+      }
+      .badge-rejected {
+        background: #fff0f0;
+        color: #b83a3a;
+      }
+      .badge-active {
+        background: #eaf9f1;
+        color: #1a7a50;
+      }
+      .badge-inactive {
+        background: #f0f0f0;
+        color: #666;
+      }
+      .badge-director {
+        background: #fef3dc;
+        color: #7a4a06;
+      }
+      .badge-teacher {
+        background: #edf2ff;
+        color: #3b4fbe;
+      }
+      .badge-student {
+        background: #e8f5ee;
+        color: #1e6b4a;
+      }
+      .badge-info {
+        background: #edf2ff;
+        color: #3b4fbe;
+      }
+      .badge-urgent {
+        background: #fff0f0;
+        color: #b83a3a;
+      }
+      .badge-general {
+        background: #f3eeff;
+        color: #6d4cc4;
+      }
+      .fee-row {
+        transition: background 0.15s;
+      }
+      .fee-row:hover {
+        background: #f8fcf9;
+      }
+      .stat-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .chart-box {
+        position: relative;
+        height: 200px;
+      }
+      .approval-card {
+        transition: all 0.15s;
+      }
+      .approval-card:hover {
+        background: #f8fafc;
+      }
+      .dir-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(201, 168, 76, 0.15);
+        color: #c9a84c;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body class="bg-bg text-navy">
+    <!-- Loading Screen -->
+    <div id="fb-loading">
+      <div class="fb-spinner"></div>
+      <div
+        id="fb-load-msg"
+        style="color: #23384f; font-weight: 600; font-size: 15px"
+      >
+        Loading Director Panel…
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="save-toast" class="save-toast">✓ Saved successfully</div>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- ══════════════════ MODALS ══════════════════ -->
+
+    <!-- Add Teacher Modal -->
+    <div id="modal-add-teacher" class="modal-overlay">
+      <div class="modal-box">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Add New Teacher / Staff
+          </h3>
+          <button
+            onclick="closeModal('modal-add-teacher')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="bg-goldLight border border-gold/30 rounded-xl p-3 mb-4 text-xs text-yellow-800"
+        >
+          💡 Teacher will be saved to
+          <strong>Firestore → users collection</strong> with
+          <code>role: "teacher"</code>. Firebase Auth account must be created
+          separately.
+        </div>
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >First Name *</label
+              >
+              <input
+                id="t-fname"
+                type="text"
+                placeholder="Mary"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Last Name *</label
+              >
+              <input
+                id="t-lname"
+                type="text"
+                placeholder="Wanjiku"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Email *</label
+              >
+              <input
+                id="t-email"
+                type="email"
+                placeholder="teacher@kairi.ac.ke"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Password *</label
+              >
+              <input
+                id="t-password"
+                type="password"
+                placeholder="••••••••"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Phone</label
+            >
+            <input
+              id="t-phone"
+              type="tel"
+              placeholder="+254 7XX XXX XXX"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Role / Position *</label
+              >
+              <select
+                id="t-role-type"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              >
+                <option value="">— Select —</option>
+                <option>Class Teacher</option>
+                <option>Subject Teacher</option>
+                <option>Deputy Head Teacher</option>
+                <option>Head Teacher</option>
+                <option>Support Staff</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Allocated Class *</label
+              >
+              <select
+                id="t-class"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              >
+                <option value="">— Select —</option>
+                <option>PP1</option>
+                <option>PP2</option>
+                <option>Grade 1</option>
+                <option>Grade 2</option>
+                <option>Grade 3</option>
+                <option>Grade 4</option>
+                <option>Grade 5</option>
+                <option>Grade 6</option>
+                <option>Grade 7</option>
+                <option>Grade 8</option>
+                <option>Grade 9</option>
+                <option>All Classes</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Subjects</label
+              >
+              <input
+                id="t-subjects"
+                type="text"
+                placeholder="Mathematics, Science"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >TSC Number</label
+              >
+              <input
+                id="t-tsc"
+                type="text"
+                placeholder="TSC/2025/XXXXX"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Qualification</label
+              >
+              <select
+                id="t-qual"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              >
+                <option>P1 Certificate</option>
+                <option>Diploma in Education</option>
+                <option>Bachelor of Education</option>
+                <option>Master of Education</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Date of Joining</label
+              >
+              <input
+                id="t-doj"
+                type="date"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+          </div>
+          <div
+            id="add-teacher-err"
+            class="hidden bg-softPink border border-danger/30 rounded-xl p-3 text-xs text-danger"
+          ></div>
+          <div class="flex gap-3 pt-2">
+            <button
+              onclick="saveTeacher()"
+              id="btn-save-teacher"
+              class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+            >
+              💾 Save to Firestore
+            </button>
+            <button
+              onclick="closeModal('modal-add-teacher')"
+              class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="modal-add-student" class="modal-overlay">
+      <div class="modal-box">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Enroll New Student
+          </h3>
+          <button
+            onclick="closeModal('modal-add-student')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="space-y-3" id="add-student-modal-body">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Record Fee Payment Modal -->
+    <div id="modal-fee-record" class="modal-overlay">
+      <div class="modal-box" style="max-width: 480px">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Record Fee Payment
+          </h3>
+          <button
+            onclick="closeModal('modal-fee-record')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Student Name *</label
+            >
+            <input
+              id="fee-student"
+              type="text"
+              placeholder="Search student…"
+              list="student-datalist"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            />
+            <input id="fee-student-uid" type="hidden" value="" />
+            <datalist id="student-datalist"></datalist>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Amount (KES) *</label
+              >
+              <input
+                id="fee-amount"
+                type="number"
+                placeholder="11400"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Date</label
+              >
+              <input
+                id="fee-date"
+                type="date"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Payment Method</label
+            >
+            <select
+              id="fee-method"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            >
+              <option>M-Pesa</option>
+              <option>Cash</option>
+              <option>Bank Transfer</option>
+              <option>Cheque</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Reference / Note</label
+            >
+            <input
+              id="fee-ref"
+              type="text"
+              placeholder="e.g. MPESA code or receipt no."
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            />
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button
+              onclick="saveFeePayment()"
+              class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+            >
+              💰 Save Payment
+            </button>
+            <button
+              onclick="closeModal('modal-fee-record')"
+              class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div id="modal-broadcast" class="modal-overlay">
+      <div class="modal-box">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Send Broadcast
+          </h3>
+          <button
+            onclick="closeModal('modal-broadcast')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Audience</label
+            >
+            <select
+              id="bc-audience"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              onchange="toggleBCClass('bc')"
+            >
+              <option value="all">All (Teachers + Students)</option>
+              <option value="teachers">Teachers Only</option>
+              <option value="students">Students Only</option>
+              <option value="parents">Parents Only</option>
+            </select>
+          </div>
+          <div id="bc-class-wrap" class="hidden">
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Target Class</label
+            >
+            <select
+              id="bc-class"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            >
+              <option value="all">All Classes</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Subject *</label
+            >
+            <input
+              id="bc-subject"
+              type="text"
+              placeholder="e.g. Term 2 Exams Begin Monday"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Type</label
+            >
+            <select
+              id="bc-type"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            >
+              <option value="general">General</option>
+              <option value="urgent">Urgent</option>
+              <option value="info">Information</option>
+              <option value="event">Event</option>
+              <option value="fees">Fees Reminder</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Message *</label
+            >
+            <textarea
+              id="bc-body"
+              rows="4"
+              placeholder="Write your message…"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 resize-none"
+            ></textarea>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button
+              onclick="sendBroadcast()"
+              class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+            >
+              📣 Send Broadcast
+            </button>
+            <button
+              onclick="closeModal('modal-broadcast')"
+              class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div id="modal-approval" class="modal-overlay">
+      <div class="modal-box" style="max-width: 480px">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Review Request
+          </h3>
+          <button
+            onclick="closeModal('modal-approval')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div id="approval-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="modal-event" class="modal-overlay">
+      <div class="modal-box" style="max-width: 440px">
+        <div class="flex items-center justify-between mb-5">
+          <h3
+            class="text-lg font-semibold text-navy"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+          >
+            Add School Event
+          </h3>
+          <button
+            onclick="closeModal('modal-event')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Event Title *</label
+            >
+            <input
+              id="ev-title"
+              type="text"
+              placeholder="e.g. Parent-Teacher Day"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Date *</label
+              >
+              <input
+                id="ev-date"
+                type="date"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Type</label
+              >
+              <select
+                id="ev-type"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+              >
+                <option>Academic</option>
+                <option>Sports</option>
+                <option>Cultural</option>
+                <option>Holiday</option>
+                <option>Parent Day</option>
+                <option>Exam</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Description</label
+            >
+            <textarea
+              id="ev-desc"
+              rows="2"
+              placeholder="Optional details…"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 resize-none"
+            ></textarea>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button
+              onclick="saveEvent()"
+              class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+            >
+              📅 Save Event
+            </button>
+            <button
+              onclick="closeModal('modal-event')"
+              class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ MAIN LAYOUT ══════════════════ -->
+    <div class="min-h-screen p-3 md:p-4">
+      <div
+        class="min-h-[calc(100vh-1.5rem)] rounded-[2rem] bg-[#EFF5F1] p-3 md:p-4 shadow-inner"
+      >
+        <div
+          class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 min-h-[calc(100vh-2.5rem)]"
+        >
+          <!-- SIDEBAR -->
+          <aside
+            id="sidebar"
+            class="bg-white rounded-[1.8rem] shadow-card p-4 flex flex-col"
+          >
+            <div class="flex items-center gap-3 px-2 py-2 mb-6">
+              <div
+                class="w-11 h-11 rounded-2xl bg-primary text-white grid place-items-center shadow-lg"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-6 h-6 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 3L2 9l10 6 10-6-10-6zM2 17l10 6 10-6M2 13l10 6 10-6"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div
+                  class="font-semibold leading-tight"
+                  style="font-family: &quot;Playfair Display&quot;, serif"
+                >
+                  Kairi St Mary's
+                </div>
+                <div class="text-xs text-muted">Director's Panel</div>
+              </div>
+            </div>
+
+            <nav
+              class="space-y-1 text-[15px] font-medium flex-1 overflow-y-auto scrollbar-hide"
+            >
+              <div
+                class="px-4 py-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Main
+              </div>
+              <button
+                onclick="activate('dashboard')"
+                data-view="dashboard"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primarySoft text-primary"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 12h7V3H3v9Zm11 9h7v-6h-7v6ZM14 3v9h7V3h-7ZM3 21h7v-6H3v6Z"
+                  /></svg
+                >Dashboard
+              </button>
+              <button
+                onclick="activate('profile')"
+                data-view="profile"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 20c0-4 3.6-7 8-7s8 3 8 7"
+                  /></svg
+                >Director Profile
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                People
+              </div>
+              <button
+                onclick="activate('teachers')"
+                data-view="teachers"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2ZM9 12h6M9 16h4"
+                  /></svg
+                >Teachers & Staff
+              </button>
+              <button
+                onclick="activate('students')"
+                data-view="students"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                  />
+                  <circle cx="9" cy="7" r="4" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                  /></svg
+                >Students
+              </button>
+              <button
+                onclick="activate('classes')"
+                data-view="classes"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <path stroke-linecap="round" d="M9 12h6M12 9v6" /></svg
+                >Classes
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Academics
+              </div>
+              <button
+                onclick="activate('attendance')"
+                data-view="attendance"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12l2 2 4-4M4 5h16v14H4z"
+                  /></svg
+                >Attendance
+              </button>
+              <button
+                onclick="activate('performance')"
+                data-view="performance"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg
+                >Performance
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                Finance & Admin
+              </div>
+              <button
+                onclick="activate('fees')"
+                data-view="fees"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path stroke-linecap="round" d="M2 10h20" /></svg
+                >Fee Management
+              </button>
+              <button
+                onclick="activate('approvals')"
+                data-view="approvals"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50 relative"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"
+                  />
+                </svg>
+                Approvals
+                <span
+                  id="approval-badge"
+                  class="hidden absolute right-3 top-2.5 w-5 h-5 bg-danger text-white text-[10px] font-bold rounded-full grid place-items-center"
+                  >0</span
+                >
+              </button>
+              <button
+                onclick="activate('events')"
+                data-view="events"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18" /></svg
+                >Events Calendar
+              </button>
+              <button
+                onclick="activate('broadcast')"
+                data-view="broadcast"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+                  /></svg
+                >Broadcast
+              </button>
+
+              <div
+                class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
+              >
+                System
+              </div>
+              <button
+                onclick="activate('audit')"
+                data-view="audit"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 17v-2m3 2v-4m3 4v-6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"
+                  /></svg
+                >Audit Log
+              </button>
+              <button
+                onclick="activate('settings')"
+                data-view="settings"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    stroke-linecap="round"
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  /></svg
+                >Settings
+              </button>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <div id="sidebar-user" class="flex items-center gap-3 px-2">
+                <div
+                  id="sb-avatar"
+                  class="w-9 h-9 rounded-full bg-gradient-to-br from-gold to-yellow-600 text-white grid place-items-center font-bold text-sm"
+                >
+                  D
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div id="sb-name" class="text-sm font-semibold truncate">
+                    Director
+                  </div>
+                  <div class="text-xs text-muted">Director's Panel</div>
+                </div>
+                <button
+                  onclick="confirmLogout()"
+                  title="Sign Out"
+                  class="w-8 h-8 rounded-xl hover:bg-softPink grid place-items-center text-muted hover:text-danger transition"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- MAIN CONTENT -->
+          <main class="flex flex-col gap-0 min-w-0">
+            <!-- Top Bar -->
+            <div
+              class="bg-white rounded-[1.8rem] shadow-card p-4 mb-4 flex items-center justify-between gap-4 sticky top-0 z-10"
+              style="top: 1rem"
+            >
+              <div class="flex items-center gap-4">
+                <button
+                  onclick="toggleSidebar()"
+                  class="lg:hidden w-10 h-10 rounded-full bg-white shadow-card grid place-items-center"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-5 h-5 fill-none stroke-current stroke-[2] text-navy"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+                <div>
+                  <div
+                    id="welcome-heading"
+                    class="text-[22px] md:text-[26px] font-semibold leading-tight"
+                    style="font-family: &quot;Playfair Display&quot;, serif"
+                  >
+                    Good morning!
+                  </div>
+                  <div id="currentDate" class="text-sm text-muted mt-0.5">
+                    Loading…
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="dir-hero-badge hidden md:flex">
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-3.5 h-3.5 fill-none stroke-current stroke-[2]"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 15l-3-3m0 0 3-3m-3 3h12M6 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1"
+                    />
+                  </svg>
+                  Director
+                </div>
+                <button
+                  onclick="activate('broadcast')"
+                  title="Broadcast"
+                  class="w-10 h-10 rounded-full bg-softGreen text-primary grid place-items-center hover:bg-primarySoft transition"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+                    />
+                  </svg>
+                </button>
+                <div
+                  id="top-avatar"
+                  class="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-yellow-600 text-white grid place-items-center font-bold text-sm cursor-pointer"
+                  onclick="activate('profile')"
+                >
+                  D
+                </div>
+              </div>
+            </div>
+
+            <!-- SCROLLABLE VIEWS -->
+            <div class="flex-1 overflow-y-auto scrollbar-hide">
+              <!-- ══ DASHBOARD ══ -->
+              <div id="view-dashboard" class="view active space-y-4">
+                <!-- Hero Banner -->
+                <div
+                  class="bg-gradient-to-r from-navy to-[#0d2137] rounded-[1.4rem] p-5 text-white relative overflow-hidden anim"
+                >
+                  <div
+                    class="absolute right-0 top-0 w-64 h-full opacity-10"
+                    style="
+                      background: radial-gradient(
+                        circle at 80% 50%,
+                        #c9a84c 0%,
+                        transparent 60%
+                      );
+                    "
+                  ></div>
+                  <div
+                    class="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <div
+                        class="text-xs font-semibold uppercase tracking-widest text-white/60 mb-1"
+                      >
+                        Kairi St Mary's School
+                      </div>
+                      <div
+                        class="text-2xl font-bold"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                        id="hero-greeting"
+                      >
+                        Director's Overview
+                      </div>
+                      <div class="text-sm text-white/70 mt-1">
+                        Term 2, 2025 · Full administrative access
+                      </div>
+                    </div>
+                    <div class="flex gap-3 flex-wrap">
+                      <div
+                        class="bg-white/10 rounded-xl px-4 py-3 text-center min-w-[80px]"
+                      >
+                        <div
+                          id="hero-students"
+                          class="text-2xl font-bold"
+                          style="
+                            font-family: &quot;Playfair Display&quot;, serif;
+                          "
+                        >
+                          —
+                        </div>
+                        <div class="text-xs text-white/60">Students</div>
+                      </div>
+                      <div
+                        class="bg-white/10 rounded-xl px-4 py-3 text-center min-w-[80px]"
+                      >
+                        <div
+                          id="hero-teachers"
+                          class="text-2xl font-bold"
+                          style="
+                            font-family: &quot;Playfair Display&quot;, serif;
+                          "
+                        >
+                          —
+                        </div>
+                        <div class="text-xs text-white/60">Teachers</div>
+                      </div>
+                      <div
+                        class="bg-white/10 rounded-xl px-4 py-3 text-center min-w-[80px]"
+                      >
+                        <div
+                          id="hero-classes"
+                          class="text-2xl font-bold"
+                          style="
+                            font-family: &quot;Playfair Display&quot;, serif;
+                          "
+                        >
+                          11
+                        </div>
+                        <div class="text-xs text-white/60">Classes</div>
+                      </div>
+                      <div
+                        class="bg-gold/20 border border-gold/30 rounded-xl px-4 py-3 text-center min-w-[80px]"
+                      >
+                        <div
+                          id="hero-approvals"
+                          class="text-2xl font-bold text-gold"
+                          style="
+                            font-family: &quot;Playfair Display&quot;, serif;
+                          "
+                        >
+                          —
+                        </div>
+                        <div class="text-xs text-white/60">Pending</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                  <div
+                    class="rounded-[1.4rem] bg-primarySoft p-4 shadow-card anim"
+                    style="animation-delay: 0.05s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-primary text-white grid place-items-center"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                          />
+                          <circle cx="9" cy="7" r="4" />
+                        </svg> </span
+                      >Total Students
+                    </div>
+                    <div
+                      id="stat-students"
+                      class="text-[34px] font-semibold mt-2 text-primary"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-primary rounded-full w-20 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                  <div
+                    class="rounded-[1.4rem] bg-softBlue p-4 shadow-card anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-[#5B5EF7] text-white grid place-items-center"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M17 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2Z"
+                          />
+                        </svg> </span
+                      >Total Teachers
+                    </div>
+                    <div
+                      id="stat-teachers"
+                      class="text-[34px] font-semibold mt-2 text-[#5B5EF7]"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-[#5B5EF7] rounded-full w-16 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                  <div
+                    class="rounded-[1.4rem] bg-softYellow p-4 shadow-card anim"
+                    style="animation-delay: 0.15s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-warning text-white grid place-items-center"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <rect x="2" y="5" width="20" height="14" rx="2" />
+                          <path stroke-linecap="round" d="M2 10h20" />
+                        </svg> </span
+                      >Fees Outstanding
+                    </div>
+                    <div
+                      id="stat-outstanding"
+                      class="text-[24px] font-semibold mt-2 text-warning"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-warning rounded-full w-16 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                  <div
+                    class="rounded-[1.4rem] bg-goldLight p-4 shadow-card anim"
+                    style="animation-delay: 0.2s"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-muted">
+                      <span
+                        class="w-8 h-8 rounded-xl bg-gold text-white grid place-items-center"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          class="w-4 h-4 fill-none stroke-current stroke-[2]"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"
+                          />
+                        </svg> </span
+                      >Pending Approvals
+                    </div>
+                    <div
+                      id="stat-approvals"
+                      class="text-[34px] font-semibold mt-2 text-gold"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      —
+                    </div>
+                    <div
+                      class="h-1.5 bg-gold rounded-full w-16 mt-3 opacity-40"
+                    ></div>
+                  </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.25s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Weekly Attendance
+                    </h3>
+                    <div class="chart-box">
+                      <canvas id="dash-att-chart"></canvas>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.3s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Fee Collection (by Class)
+                    </h3>
+                    <div class="chart-box">
+                      <canvas id="dash-fee-chart"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Actions + Recent Activity -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.35s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Quick Actions
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                      <button
+                        onclick="openModal('modal-add-teacher')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softBlue hover:bg-blue-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-[#5B5EF7] text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 5v14M5 12h14"
+                            />
+                          </svg>
+                        </div>
+                        <span
+                          class="text-xs font-semibold text-navy text-center"
+                          >Add Teacher</span
+                        >
+                      </button>
+                      <button
+                        onclick="openAddStudentModal()"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-primarySoft hover:bg-green-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-primary text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                            />
+                            <circle cx="9" cy="7" r="4" />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                            />
+                          </svg>
+                        </div>
+                        <span
+                          class="text-xs font-semibold text-navy text-center"
+                          >Enroll Student</span
+                        >
+                      </button>
+                      <button
+                        onclick="openModal('modal-fee-record')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softYellow hover:bg-yellow-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-warning text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <path stroke-linecap="round" d="M2 10h20" />
+                          </svg>
+                        </div>
+                        <span
+                          class="text-xs font-semibold text-navy text-center"
+                          >Record Fee</span
+                        >
+                      </button>
+                      <button
+                        onclick="openModal('modal-broadcast')"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softPurple hover:bg-purple-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-[#6D4CC4] text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+                            />
+                          </svg>
+                        </div>
+                        <span
+                          class="text-xs font-semibold text-navy text-center"
+                          >Broadcast</span
+                        >
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Pending Approvals Preview -->
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.4s"
+                  >
+                    <div class="flex items-center justify-between mb-4">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Pending Approvals
+                      </h3>
+                      <button
+                        onclick="activate('approvals')"
+                        class="text-xs text-primary font-semibold hover:underline"
+                      >
+                        View All
+                      </button>
+                    </div>
+                    <div id="dash-approvals-preview" class="space-y-2">
+                      <div class="text-xs text-muted text-center py-4">
+                        Loading…
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Recent Notices + Fee Defaulters -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.45s"
+                  >
+                    <div class="flex items-center justify-between mb-4">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Recent Broadcasts
+                      </h3>
+                      <button
+                        onclick="activate('broadcast')"
+                        class="text-xs text-primary font-semibold hover:underline"
+                      >
+                        View All
+                      </button>
+                    </div>
+                    <div id="dash-broadcasts-preview" class="space-y-3">
+                      <div class="text-xs text-muted text-center py-4">
+                        Loading…
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.5s"
+                  >
+                    <div class="flex items-center justify-between mb-4">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Top Fee Defaulters
+                      </h3>
+                      <button
+                        onclick="activate('fees')"
+                        class="text-xs text-primary font-semibold hover:underline"
+                      >
+                        View All
+                      </button>
+                    </div>
+                    <div id="dash-defaulters-preview" class="space-y-2">
+                      <div class="text-xs text-muted text-center py-4">
+                        Loading…
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ DIRECTOR PROFILE ══ -->
+              <div id="view-profile" class="view space-y-4">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <h3
+                      class="font-semibold text-navy mb-5"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Director Profile
+                    </h3>
+                    <div class="flex items-center gap-4 mb-5">
+                      <div
+                        id="prof-avatar"
+                        class="w-16 h-16 rounded-2xl bg-gradient-to-br from-gold to-yellow-600 text-white grid place-items-center font-bold text-2xl"
+                      >
+                        D
+                      </div>
+                      <div>
+                        <div
+                          id="prof-display-name"
+                          class="text-lg font-semibold"
+                        >
+                          Director
+                        </div>
+                        <div class="text-sm text-muted">
+                          School Director · Kairi St Mary's
+                        </div>
+                        <div
+                          id="prof-display-email"
+                          class="text-sm text-gold mt-1"
+                        >
+                          —
+                        </div>
+                      </div>
+                    </div>
+                    <div class="space-y-3">
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Full Name</label
+                        >
+                        <input
+                          id="prof-name"
+                          type="text"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Email</label
+                        >
+                        <input
+                          id="prof-email"
+                          type="email"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                          readonly
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Phone</label
+                        >
+                        <input
+                          id="prof-phone"
+                          type="tel"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <button
+                        onclick="saveProfile()"
+                        class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        Save Profile
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-5"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      School Settings
+                    </h3>
+                    <div class="space-y-3">
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >School Name</label
+                        >
+                        <input
+                          id="setting-school-name"
+                          type="text"
+                          value="Kairi St Mary's School"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                            >Current Term</label
+                          >
+                          <select
+                            id="setting-term"
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                          >
+                            <option>Term 1, 2025</option>
+                            <option selected>Term 2, 2025</option>
+                            <option>Term 3, 2025</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                            >Curriculum</label
+                          >
+                          <select
+                            id="setting-curriculum"
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                          >
+                            <option selected>CBC</option>
+                            <option>8-4-4</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Term Fee per Student (KES)</label
+                        >
+                        <input
+                          id="setting-term-fee"
+                          type="number"
+                          value="11400"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Sub-County</label
+                        >
+                        <input
+                          id="setting-subcounty"
+                          type="text"
+                          value="Gatundu North"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <button
+                        onclick="saveSchoolSettings()"
+                        class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        Save Settings to Firestore
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ TEACHERS ══ -->
+              <div id="view-teachers" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4"
+                  >
+                    <div class="flex-1">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Teachers & Staff
+                      </h3>
+                      <p class="text-xs text-muted mt-0.5">
+                        Manage all teaching and support staff
+                      </p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                      <input
+                        id="teacher-search"
+                        oninput="filterTeachers()"
+                        type="text"
+                        placeholder="Search teacher…"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50 w-44"
+                      />
+                      <button
+                        onclick="openModal('modal-add-teacher')"
+                        class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        + Add Teacher
+                      </button>
+                    </div>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Teacher
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Role
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Subjects
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Marks
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Status
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="teachers-table-body">
+                        <tr>
+                          <td
+                            colspan="7"
+                            class="py-8 text-center text-muted text-xs"
+                          >
+                            Loading teachers…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ STUDENTS ══ -->
+              <div id="view-students" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4"
+                  >
+                    <div class="flex-1">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        All Students
+                      </h3>
+                      <p id="students-sub" class="text-xs text-muted mt-0.5">
+                        Loading…
+                      </p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                      <input
+                        id="student-search"
+                        oninput="filterStudents()"
+                        type="text"
+                        placeholder="Search student…"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50 w-44"
+                      />
+                      <select
+                        id="student-class-filter"
+                        onchange="filterStudents()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Classes</option>
+                        <option>PP1</option>
+                        <option>PP2</option>
+                        <option>Grade 1</option>
+                        <option>Grade 2</option>
+                        <option>Grade 3</option>
+                        <option>Grade 4</option>
+                        <option>Grade 5</option>
+                        <option>Grade 6</option>
+                        <option>Grade 7</option>
+                        <option>Grade 8</option>
+                        <option>Grade 9</option>
+                      </select>
+                      <button
+                        onclick="openAddStudentModal()"
+                        class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        + Enroll
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Student stats strip -->
+                  <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="rounded-2xl bg-primarySoft p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Total Enrolled</div>
+                      <div
+                        id="stu-total"
+                        class="font-bold text-primary text-lg"
+                      >
+                        —
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-softBlue p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Boys</div>
+                      <div
+                        id="stu-boys"
+                        class="font-bold text-[#5B5EF7] text-lg"
+                      >
+                        —
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-softPink p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Girls</div>
+                      <div id="stu-girls" class="font-bold text-danger text-lg">
+                        —
+                      </div>
+                    </div>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Student
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Adm No.
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Gender
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Fee Status
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="students-table-body">
+                        <tr>
+                          <td
+                            colspan="6"
+                            class="py-8 text-center text-muted text-xs"
+                          >
+                            Loading students…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ CLASSES ══ -->
+              <div id="view-classes" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <h3
+                    class="font-semibold text-navy mb-4"
+                    style="font-family: &quot;Playfair Display&quot;, serif"
+                  >
+                    Class Overview
+                  </h3>
+                  <div
+                    id="classes-grid"
+                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
+                  >
+                    <div class="text-xs text-muted text-center py-8 col-span-3">
+                      Loading…
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ ATTENDANCE ══ -->
+              <div id="view-attendance" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <h3
+                    class="font-semibold text-navy mb-4"
+                    style="font-family: &quot;Playfair Display&quot;, serif"
+                  >
+                    Attendance Overview
+                  </h3>
+                  <div class="chart-box mb-4">
+                    <canvas id="att-chart"></canvas>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Teacher
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Total
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Present
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            %
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="att-table-body">
+                        <tr>
+                          <td
+                            colspan="5"
+                            class="py-8 text-center text-muted text-xs"
+                          >
+                            Loading attendance…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ PERFORMANCE ══ -->
+              <div id="view-performance" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <h3
+                    class="font-semibold text-navy mb-4"
+                    style="font-family: &quot;Playfair Display&quot;, serif"
+                  >
+                    Academic Performance
+                  </h3>
+                  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div
+                        class="text-xs text-muted font-semibold uppercase tracking-wide mb-2"
+                      >
+                        Average by Subject
+                      </div>
+                      <div class="chart-box">
+                        <canvas id="perf-subject-chart"></canvas>
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        class="text-xs text-muted font-semibold uppercase tracking-wide mb-2"
+                      >
+                        CBC Performance Levels
+                      </div>
+                      <div class="chart-box">
+                        <canvas id="perf-cbc-chart"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Teacher
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Students
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Avg Score
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Attendance
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            Fee Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="perf-table-body">
+                        <tr>
+                          <td
+                            colspan="6"
+                            class="py-8 text-center text-muted text-xs"
+                          >
+                            Loading performance data…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ FEE MANAGEMENT ══ -->
+              <div id="view-fees" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center gap-3 mb-4"
+                  >
+                    <div class="flex-1">
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Fee Management
+                      </h3>
+                      <p class="text-xs text-muted mt-0.5">
+                        Track and manage school fee payments
+                      </p>
+                    </div>
+                    <div class="flex gap-2">
+                      <select
+                        id="fee-class-filter"
+                        onchange="filterFeeTable()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Classes</option>
+                        <option>PP1</option>
+                        <option>PP2</option>
+                        <option>Grade 1</option>
+                        <option>Grade 2</option>
+                        <option>Grade 3</option>
+                        <option>Grade 4</option>
+                        <option>Grade 5</option>
+                        <option>Grade 6</option>
+                        <option>Grade 7</option>
+                        <option>Grade 8</option>
+                        <option>Grade 9</option>
+                      </select>
+                      <select
+                        id="fee-status-filter"
+                        onchange="filterFeeTable()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="partial">Partial</option>
+                        <option value="unpaid">Unpaid</option>
+                      </select>
+                      <button
+                        onclick="openModal('modal-fee-record')"
+                        class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        + Record
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Summary -->
+                  <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="rounded-2xl bg-softGreen p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Total Collected</div>
+                      <div
+                        id="fee-collected"
+                        class="font-bold text-success text-lg"
+                      >
+                        KES 0
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-softYellow p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Outstanding</div>
+                      <div
+                        id="fee-outstanding-display"
+                        class="font-bold text-warning text-lg"
+                      >
+                        KES 0
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-softBlue p-3 text-center">
+                      <div class="text-xs text-muted mb-1">Cleared</div>
+                      <div
+                        id="fee-cleared"
+                        class="font-bold text-[#5B5EF7] text-lg"
+                      >
+                        0
+                      </div>
+                    </div>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Student
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Class
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Total Fee
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Paid
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Balance
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            Status
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-right"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="fee-table-body">
+                        <tr>
+                          <td
+                            colspan="7"
+                            class="py-8 text-center text-muted text-xs"
+                          >
+                            Loading fee data…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ APPROVALS ══ -->
+              <div id="view-approvals" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        Approvals Queue
+                      </h3>
+                      <p class="text-xs text-muted mt-0.5">
+                        Review and act on pending requests from teachers and
+                        staff
+                      </p>
+                    </div>
+                    <select
+                      id="approval-filter"
+                      onchange="filterApprovals()"
+                      class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                    >
+                      <option value="">All Types</option>
+                      <option value="Leave">Leave</option>
+                      <option value="School Trip">School Trip</option>
+                      <option value="Purchase Order">Purchase Order</option>
+                      <option value="Grade Change">Grade Change</option>
+                    </select>
+                  </div>
+                  <div id="approvals-list" class="space-y-3">
+                    <div class="text-xs text-muted text-center py-8">
+                      Loading approvals…
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ EVENTS ══ -->
+              <div id="view-events" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3
+                      class="font-semibold text-navy"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Events Calendar
+                    </h3>
+                    <button
+                      onclick="openModal('modal-event')"
+                      class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                    >
+                      + Add Event
+                    </button>
+                  </div>
+                  <div id="events-list" class="space-y-3">
+                    <div class="text-xs text-muted text-center py-8">
+                      Loading events…
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ BROADCAST ══ -->
+              <div id="view-broadcast" class="view space-y-4">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <h3
+                      class="font-semibold text-navy mb-5"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Send Broadcast
+                    </h3>
+                    <div class="space-y-3">
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Audience</label
+                        >
+                        <select
+                          id="bc2-audience"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                          onchange="toggleBCClass('bc2')"
+                        >
+                          <option value="all">All (Teachers + Students)</option>
+                          <option value="teachers">Teachers Only</option>
+                          <option value="students">Students Only</option>
+                          <option value="parents">Parents Only</option>
+                        </select>
+                      </div>
+                      <div id="bc2-class-wrap" class="hidden">
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Target Class</label
+                        >
+                        <select
+                          id="bc2-class"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        >
+                          <option value="all">All Classes</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Subject *</label
+                        >
+                        <input
+                          id="bc2-subject"
+                          type="text"
+                          placeholder="e.g. Term 2 Begins Monday"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Type</label
+                        >
+                        <select
+                          id="bc2-type"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        >
+                          <option value="general">General</option>
+                          <option value="urgent">Urgent</option>
+                          <option value="info">Information</option>
+                          <option value="event">Event</option>
+                          <option value="fees">Fees Reminder</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Message *</label
+                        >
+                        <textarea
+                          id="bc2-body"
+                          rows="5"
+                          placeholder="Write your message…"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 resize-none"
+                        ></textarea>
+                      </div>
+                      <button
+                        onclick="sendBroadcast2()"
+                        class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        📣 Send Broadcast
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Broadcast History
+                    </h3>
+                    <div id="broadcast-history" class="space-y-3">
+                      <div class="text-xs text-muted text-center py-4">
+                        No broadcasts yet
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ AUDIT LOG ══ -->
+              <div id="view-audit" class="view space-y-4">
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3
+                      class="font-semibold text-navy"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Audit Log
+                    </h3>
+                    <select
+                      id="audit-filter"
+                      onchange="filterAudit()"
+                      class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                    >
+                      <option value="">All Levels</option>
+                      <option value="info">Info</option>
+                      <option value="success">Success</option>
+                      <option value="warning">Warning</option>
+                    </select>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b">
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Time
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Action
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Actor
+                          </th>
+                          <th
+                            class="text-left pb-3 text-xs text-muted font-semibold"
+                          >
+                            Detail
+                          </th>
+                          <th
+                            class="pb-3 text-xs text-muted font-semibold text-center"
+                          >
+                            Level
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="audit-table-body">
+                        <tr>
+                          <td
+                            colspan="5"
+                            class="py-8 text-center text-muted text-xs"
+                          >
+                            Loading audit log…
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ══ SETTINGS ══ -->
+              <div id="view-settings" class="view space-y-4">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Portal Access Control
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                      <div
+                        class="flex items-center justify-between py-2 border-b border-slate-100"
+                      >
+                        <span class="text-muted">Teacher Portal</span
+                        ><span class="badge badge-active">✅ Enabled</span>
+                      </div>
+                      <div
+                        class="flex items-center justify-between py-2 border-b border-slate-100"
+                      >
+                        <span class="text-muted">Student Portal</span
+                        ><span class="badge badge-active">✅ Enabled</span>
+                      </div>
+                      <div
+                        class="flex items-center justify-between py-2 border-b border-slate-100"
+                      >
+                        <span class="text-muted">Parent Portal</span
+                        ><span class="badge badge-active">✅ Enabled</span>
+                      </div>
+                      <div
+                        class="flex items-center justify-between py-2 border-b border-slate-100"
+                      >
+                        <span class="text-muted">Online Fee Payment</span
+                        ><span class="badge badge-pending">⚠ Coming Soon</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Firebase Configuration
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                      <div
+                        class="flex items-center justify-between py-2 border-b border-slate-100"
+                      >
+                        <span class="text-muted">Project ID</span
+                        ><span
+                          id="fb-project-id"
+                          class="text-xs font-mono text-navy"
+                          >—</span
+                        >
+                      </div>
+                      <div
+                        class="flex items-center justify-between py-2 border-b border-slate-100"
+                      >
+                        <span class="text-muted">Auth Status</span
+                        ><span id="fb-auth-status" class="badge badge-active"
+                          >Connected</span
+                        >
+                      </div>
+                      <div class="flex items-center justify-between py-2">
+                        <span class="text-muted">Firestore</span
+                        ><span class="badge badge-active">Active</span>
+                      </div>
+                    </div>
+                    <button
+                      onclick="confirmLogout()"
+                      class="mt-4 w-full py-2.5 bg-softPink text-danger rounded-xl text-sm font-semibold hover:bg-red-100 transition"
+                    >
+                      Sign Out of Director Panel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /views -->
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ SCRIPT ══════════════════ -->
+    <script type="module">
+      import {
+        initializeApp,
+        deleteApp,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        signOut,
+        createUserWithEmailAndPassword,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        doc,
+        getDoc,
+        getDocs,
+        addDoc,
+        setDoc,
+        updateDoc,
+        deleteDoc,
+        query,
+        where,
+        orderBy,
+        serverTimestamp,
+        onSnapshot,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      // ──────────────────────────────────────────────
+      // ⚙️  FIREBASE CONFIG — replace with yours or import from firebase-config.js
+      // ──────────────────────────────────────────────
+      let app, auth, db;
+      try {
+        const cfg = await import("../firebase-config.js").catch(() => null);
+        if (cfg && cfg.auth && cfg.db) {
+          auth = cfg.auth;
+          db = cfg.db;
+        } else {
+          const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+          };
+          app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+        }
+      } catch (e) {
+        console.error("Firebase init error:", e);
+      }
+
+      // ── STATE ─────────────────────────────────────
+      let DIRECTOR = {};
+      let ALL_STUDENTS = [];
+      let ALL_TEACHERS = [];
+      let ALL_FINANCE = [];
+      let ALL_APPROVALS = [];
+      let ALL_BROADCASTS = [];
+      let ALL_EVENTS = [];
+      let ALL_AUDIT = [];
+      let SCHOOL_SETTINGS = {};
+      let chartInsts = {};
+
+      const CLASSES = [
+        "PP1",
+        "PP2",
+        "Grade 1",
+        "Grade 2",
+        "Grade 3",
+        "Grade 4",
+        "Grade 5",
+        "Grade 6",
+        "Grade 7",
+        "Grade 8",
+        "Grade 9",
+      ];
+
+      // ── HELPERS ───────────────────────────────────
+      function showLoad(msg) {
+        document.getElementById("fb-load-msg").textContent = msg || "Loading…";
+        document.getElementById("fb-loading").style.display = "flex";
+      }
+      function hideLoad() {
+        document.getElementById("fb-loading").style.display = "none";
+      }
+      function showToast(msg = "Saved") {
+        const t = document.getElementById("save-toast");
+        t.textContent = "✓ " + msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+      }
+      function initials(name) {
+        return (name || "?")
+          .split(" ")
+          .map((w) => w[0] || "")
+          .join("")
+          .substring(0, 2)
+          .toUpperCase();
+      }
+      function fmtTime(ts) {
+        if (!ts) return "—";
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        const diff = Math.floor((new Date() - d) / 1000);
+        if (diff < 60) return "Just now";
+        if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+        if (diff < 86400)
+          return (
+            "Today " +
+            d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          );
+        return d.toLocaleDateString("en-KE", {
+          day: "numeric",
+          month: "short",
+        });
+      }
+      function fmtCcy(n) {
+        return "KES " + Number(n || 0).toLocaleString();
+      }
+      function feeStatus(paid, total) {
+        if (!total) return "unpaid";
+        const p = paid / total;
+        if (p >= 1) return "paid";
+        if (p > 0) return "partial";
+        return "unpaid";
+      }
+      function destroyChart(k) {
+        if (chartInsts[k]) {
+          chartInsts[k].destroy();
+          delete chartInsts[k];
+        }
+      }
+
+      // ── NAVIGATION ────────────────────────────────
+      window.activate = function (view) {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("bg-primarySoft", "text-primary"));
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.add("hover:bg-slate-50"));
+        const el = document.getElementById("view-" + view);
+        if (el) el.classList.add("active");
+        const btn = document.querySelector(`[data-view="${view}"]`);
+        if (btn) {
+          btn.classList.add("bg-primarySoft", "text-primary");
+          btn.classList.remove("hover:bg-slate-50");
+        }
+        localStorage.setItem("directorView", view);
+        closeSidebar();
+        if (view === "dashboard") renderDashboard();
+        if (view === "teachers") renderTeachers();
+        if (view === "students") renderStudents();
+        if (view === "classes") renderClasses();
+        if (view === "attendance") renderAttendance();
+        if (view === "performance") setTimeout(renderPerformance, 100);
+        if (view === "fees") renderFees();
+        if (view === "approvals") renderApprovals();
+        if (view === "events") renderEvents();
+        if (view === "broadcast") renderBroadcastHistory();
+        if (view === "audit") renderAuditLog();
+        if (view === "settings") renderSettings();
+      };
+      window.toggleSidebar = () => {
+        document.getElementById("sidebar").classList.toggle("open");
+        document.getElementById("sidebar-overlay").classList.toggle("show");
+      };
+      window.closeSidebar = () => {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebar-overlay").classList.remove("show");
+      };
+      window.openModal = (id) =>
+        document.getElementById(id).classList.add("open");
+      window.closeModal = (id) =>
+        document.getElementById(id).classList.remove("open");
+
+      // Populate Broadcast Class Dropdowns
+      function populateBCClasses() {
+        ["bc-class", "bc2-class"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          CLASSES.forEach((c) => {
+            const o = document.createElement("option");
+            o.value = c;
+            o.textContent = c;
+            el.appendChild(o);
+          });
+        });
+      }
+      populateBCClasses();
+
+      window.toggleBCClass = (prefix) => {
+        const aud = document.getElementById(prefix + "-audience").value;
+        const wrap = document.getElementById(prefix + "-class-wrap");
+        if (aud === "students" || aud === "parents")
+          wrap.classList.remove("hidden");
+        else wrap.classList.add("hidden");
+      };
+
+      // ── DATE ──────────────────────────────────────
+      const dateStr = new Date().toLocaleDateString("en-KE", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      document.getElementById("currentDate").textContent = dateStr;
+      const hr = new Date().getHours();
+      const greet =
+        hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+      document.getElementById("welcome-heading").textContent = greet + "!";
+
+      // ── AUTH STATE ────────────────────────────────
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+        showLoad("Loading Director Panel…");
+        try {
+          await loadDirectorProfile(user);
+          showLoad("Loading school data…");
+          await Promise.all([
+            loadStudents(),
+            loadTeachers(),
+            loadFinance(),
+            loadApprovals(),
+            loadBroadcasts(),
+            loadEvents(),
+            loadAudit(),
+            loadSchoolSettings(),
+          ]);
+        } catch (err) {
+          console.error(err);
+        }
+        hideLoad();
+        activate(localStorage.getItem("directorView") || "dashboard");
+      });
+
+      // ── LOAD DIRECTOR PROFILE ─────────────────────
+      async function loadDirectorProfile(user) {
+        try {
+          const snap = await getDoc(doc(db, "users", user.uid));
+          const data = snap.exists() ? snap.data() : {};
+
+          if (data.role !== "director") {
+            alert("Access Denied: You do not have Director privileges.");
+            window.location.href = "login.html";
+            return;
+          }
+
+          DIRECTOR = { uid: user.uid, email: user.email, ...data };
+          const name =
+            data.displayName ||
+            data.fullName ||
+            user.displayName ||
+            user.email?.split("@")[0] ||
+            "Director";
+          const ini = initials(name);
+          document.getElementById("sb-avatar").textContent = ini;
+          document.getElementById("top-avatar").textContent = ini;
+          document.getElementById("sb-name").textContent = name;
+          document.getElementById("prof-avatar").textContent = ini;
+          document.getElementById("prof-display-name").textContent = name;
+          document.getElementById("prof-display-email").textContent =
+            user.email || "";
+          document.getElementById("prof-name").value = name;
+          document.getElementById("prof-email").value = user.email || "";
+          document.getElementById("prof-phone").value = data.phone || "";
+          document.getElementById("hero-greeting").textContent =
+            greet + ", " + name.split(" ")[0] + "!";
+        } catch (e) {
+          console.error("Profile error:", e);
+        }
+      }
+
+      // ── LOAD STUDENTS ─────────────────────────────
+      async function loadStudents() {
+        try {
+          const q = query(
+            collection(db, "users"),
+            where("role", "==", "student"),
+          );
+          const snap = await getDocs(q);
+          ALL_STUDENTS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          updateStudentStats();
+          populateStudentDatalist();
+        } catch (e) {
+          console.error("Students error:", e);
+        }
+      }
+
+      function updateStudentStats() {
+        const total = ALL_STUDENTS.length;
+        const boys = ALL_STUDENTS.filter(
+          (s) => (s.gender || "").toLowerCase() === "male" || s.gender === "M",
+        ).length;
+        const girls = ALL_STUDENTS.filter(
+          (s) =>
+            (s.gender || "").toLowerCase() === "female" || s.gender === "F",
+        ).length;
+        document.getElementById("stat-students").textContent = total || "—";
+        document.getElementById("hero-students").textContent = total || "—";
+        document.getElementById("stu-total").textContent = total;
+        document.getElementById("stu-boys").textContent = boys;
+        document.getElementById("stu-girls").textContent = girls;
+        document.getElementById("students-sub").textContent =
+          total + " enrolled · Term 2, 2025";
+      }
+
+      function populateStudentDatalist() {
+        const dl = document.getElementById("student-datalist");
+        dl.innerHTML = ALL_STUDENTS.map(
+          (s) => `<option value="${s.fullName || s.full_name}">`,
+        ).join("");
+      }
+
+      // ── LOAD TEACHERS ─────────────────────────────
+      async function loadTeachers() {
+        try {
+          const q = query(
+            collection(db, "users"),
+            where("role", "==", "teacher"),
+          );
+          const snap = await getDocs(q);
+          ALL_TEACHERS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          document.getElementById("stat-teachers").textContent =
+            ALL_TEACHERS.length || "—";
+          document.getElementById("hero-teachers").textContent =
+            ALL_TEACHERS.length || "—";
+        } catch (e) {
+          console.error("Teachers error:", e);
+        }
+      }
+
+      // ── LOAD FINANCE ──────────────────────────────
+      async function loadFinance() {
+        try {
+          const snap = await getDocs(collection(db, "finance"));
+          ALL_FINANCE = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          updateFeeStats();
+        } catch (e) {
+          console.error("Finance error:", e);
+        }
+      }
+
+      function updateFeeStats() {
+        let collected = 0,
+          outstanding = 0,
+          cleared = 0;
+        const termFee = parseInt(SCHOOL_SETTINGS.termFee || 11400);
+        ALL_FINANCE.forEach((f) => {
+          const paid = f.total_paid || 0; // Use schema-defined field name
+          const total = f.termly_total || termFee; // Use schema-defined field name
+          collected += paid;
+          outstanding += Math.max(total - paid, 0);
+          if (paid >= total) cleared++;
+        });
+        document.getElementById("stat-outstanding").textContent = outstanding
+          ? "KES " + Math.round(outstanding / 1000) + "K"
+          : "—";
+        document.getElementById("fee-collected").textContent =
+          fmtCcy(collected);
+        document.getElementById("fee-outstanding-display").textContent =
+          fmtCcy(outstanding);
+        document.getElementById("fee-cleared").textContent = cleared;
+      }
+
+      // ── LOAD APPROVALS ────────────────────────────
+      async function loadApprovals() {
+        try {
+          const q = query(
+            collection(db, "approvals"),
+            orderBy("createdAt", "desc"),
+          );
+          const snap = await getDocs(q);
+          ALL_APPROVALS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          const pending = ALL_APPROVALS.filter(
+            (a) => a.status === "pending",
+          ).length;
+          document.getElementById("stat-approvals").textContent = pending;
+          document.getElementById("hero-approvals").textContent = pending;
+          const badge = document.getElementById("approval-badge");
+          if (pending > 0) {
+            badge.textContent = pending;
+            badge.classList.remove("hidden");
+          }
+        } catch (e) {
+          console.error("Approvals error:", e);
+        }
+      }
+
+      // ── LOAD BROADCASTS ───────────────────────────
+      async function loadBroadcasts() {
+        try {
+          const q = query(
+            collection(db, "broadcasts"),
+            orderBy("createdAt", "desc"),
+          );
+          const snap = await getDocs(q);
+          ALL_BROADCASTS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.error("Broadcasts error:", e);
+        }
+      }
+
+      // ── LOAD EVENTS ───────────────────────────────
+      async function loadEvents() {
+        try {
+          const q = query(
+            collection(db, "school_events"),
+            orderBy("date", "asc"),
+          );
+          const snap = await getDocs(q);
+          ALL_EVENTS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.error("Events error:", e);
+        }
+      }
+
+      // ── LOAD AUDIT ────────────────────────────────
+      async function loadAudit() {
+        try {
+          const q = query(
+            collection(db, "audit_log"),
+            orderBy("createdAt", "desc"),
+          );
+          const snap = await getDocs(q);
+          ALL_AUDIT = snap.docs
+            .slice(0, 100)
+            .map((d) => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+          console.error("Audit error:", e);
+        }
+      }
+
+      // ── LOAD SCHOOL SETTINGS ──────────────────────
+      async function loadSchoolSettings() {
+        try {
+          const snap = await getDoc(doc(db, "settings", "school"));
+          if (snap.exists()) {
+            SCHOOL_SETTINGS = snap.data();
+            if (SCHOOL_SETTINGS.schoolName)
+              document.getElementById("setting-school-name").value =
+                SCHOOL_SETTINGS.schoolName;
+            if (SCHOOL_SETTINGS.termFee)
+              document.getElementById("setting-term-fee").value =
+                SCHOOL_SETTINGS.termFee;
+            if (SCHOOL_SETTINGS.subCounty)
+              document.getElementById("setting-subcounty").value =
+                SCHOOL_SETTINGS.subCounty;
+          }
+        } catch (e) {}
+      }
+
+      // ── RENDER DASHBOARD ──────────────────────────
+      function renderDashboard() {
+        renderApprovalPreview();
+        renderBroadcastPreview();
+        renderDefaulterPreview();
+        buildDashCharts();
+      }
+
+      function renderApprovalPreview() {
+        const el = document.getElementById("dash-approvals-preview");
+        const pending = ALL_APPROVALS.filter(
+          (a) => a.status === "pending",
+        ).slice(0, 4);
+        if (!pending.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-4">No pending approvals 🎉</div>';
+          return;
+        }
+        el.innerHTML = pending
+          .map(
+            (a) => `
+          <div class="approval-card flex items-center gap-3 p-3 rounded-xl cursor-pointer" onclick="activate('approvals')">
+            <div class="w-8 h-8 rounded-xl bg-goldLight text-gold grid place-items-center flex-shrink-0">
+              <svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-[2]"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-navy truncate">${a.text || a.type || "Request"}</div>
+              <div class="text-xs text-muted">${a.from || ""} · ${fmtTime(a.createdAt)}</div>
+            </div>
+            <span class="badge badge-pending">${a.type || "Request"}</span>
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      function renderBroadcastPreview() {
+        const el = document.getElementById("dash-broadcasts-preview");
+        const recent = ALL_BROADCASTS.slice(0, 4);
+        if (!recent.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-4">No broadcasts yet</div>';
+          return;
+        }
+        el.innerHTML = recent
+          .map(
+            (b) => `
+          <div class="flex items-start gap-3 p-2">
+            <div class="w-7 h-7 rounded-lg bg-primarySoft text-primary grid place-items-center flex-shrink-0 mt-0.5">
+              <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-navy truncate">${b.subject || "Broadcast"}</div>
+              <div class="text-xs text-muted">${b.audience || "All"}${b.targetClass && b.targetClass !== "all" ? " (" + b.targetClass + ")" : ""} · ${fmtTime(b.createdAt)}</div>
+            </div>
+            <span class="badge badge-${b.type || "general"}">${b.type || "General"}</span>
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      function renderDefaulterPreview() {
+        const el = document.getElementById("dash-defaulters-preview");
+        const termFee = parseInt(SCHOOL_SETTINGS.termFee || 11400);
+        const finMap = {};
+        ALL_FINANCE.forEach((f) => (finMap[f.student_id || f.studentId] = f));
+        const defaulters = ALL_STUDENTS.map((s) => {
+          const f = finMap[s.id] || {};
+          const paid = f.total_paid || 0; // Use schema-defined field name
+          const owed = Math.max(termFee - paid, 0);
+          return {
+            name: s.fullName || s.full_name || "Student",
+            cls: s.class_stream || s.classStream || "—",
+            owed,
+          };
+        })
+          .filter((d) => d.owed > 0)
+          .sort((a, b) => b.owed - a.owed)
+          .slice(0, 5);
+        if (!defaulters.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-4">No fee defaulters 🎉</div>';
+          return;
+        }
+        el.innerHTML = defaulters
+          .map(
+            (d) => `
+          <div class="fee-row flex items-center gap-3 p-2 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-softPink text-danger grid place-items-center text-xs font-bold flex-shrink-0">${initials(d.name)}</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-navy truncate">${d.name}</div>
+              <div class="text-xs text-muted">${d.cls}</div>
+            </div>
+            <span class="text-sm font-semibold text-danger">${fmtCcy(d.owed)}</span>
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      function buildDashCharts() {
+        buildAttendanceChart("dash-att-chart");
+        buildFeeChart("dash-fee-chart");
+      }
+
+      function buildAttendanceChart(canvasId) {
+        destroyChart(canvasId);
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Mon", "Tue", "Wed"];
+        chartInsts[canvasId] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Present",
+                data: [198, 203, 195, 207, 201, 199, 205, 198],
+                backgroundColor: "#35B37E",
+                borderRadius: 4,
+              },
+              {
+                label: "Absent",
+                data: [18, 13, 21, 9, 15, 17, 11, 18],
+                backgroundColor: "#E86D6D",
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { font: { size: 10 }, boxWidth: 10 },
+              },
+            },
+            scales: {
+              x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { font: { size: 10 } },
+              },
+              y: {
+                stacked: true,
+                grid: { color: "#f4f6fb" },
+                ticks: { font: { size: 10 } },
+              },
+            },
+          },
+        });
+      }
+
+      function buildFeeChart(canvasId) {
+        destroyChart(canvasId);
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        const termFee = parseInt(SCHOOL_SETTINGS.termFee || 11400);
+        const clsData = {};
+        CLASSES.forEach((c) => (clsData[c] = { collected: 0, outstanding: 0 }));
+        const finMap = {};
+        ALL_FINANCE.forEach((f) => (finMap[f.student_id || f.studentId] = f));
+        ALL_STUDENTS.forEach((s) => {
+          const cls = s.class_stream || s.classStream;
+          if (!clsData[cls]) return; // Skip if class not in predefined list
+          const f = finMap[s.id] || {};
+          const paid = f.total_paid || 0; // Use schema-defined field name
+          clsData[cls].collected += paid;
+          clsData[cls].outstanding += Math.max(termFee - paid, 0);
+        });
+        const labels = CLASSES.map((c) => c.replace("Grade ", "Gr "));
+        chartInsts[canvasId] = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Collected",
+                data: CLASSES.map((c) =>
+                  Math.round(clsData[c].collected / 1000),
+                ),
+                backgroundColor: "#35B37E",
+                borderRadius: 4,
+              },
+              {
+                label: "Outstanding",
+                data: CLASSES.map((c) =>
+                  Math.round(clsData[c].outstanding / 1000),
+                ),
+                backgroundColor: "#E86D6D",
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { font: { size: 10 }, boxWidth: 10 },
+              },
+            },
+            scales: {
+              x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { font: { size: 10 } },
+              },
+              y: {
+                stacked: true,
+                grid: { color: "#f4f6fb" },
+                ticks: { font: { size: 10 }, callback: (v) => "K" + v },
+              },
+            },
+          },
+        });
+      }
+
+      // ── RENDER TEACHERS ───────────────────────────
+      function renderTeachers() {
+        const tbody = document.getElementById("teachers-table-body");
+        if (!ALL_TEACHERS.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="py-8 text-center text-muted text-xs">No teachers found in Firestore</td></tr>';
+          return;
+        }
+        const colors = [
+          "#e1f5ee",
+          "#e6f1fb",
+          "#faeeda",
+          "#eeedfe",
+          "#fcebeb",
+          "#fef3e2",
+        ];
+        const tcs = [
+          "#0a6e4e",
+          "#0c447c",
+          "#7a4a06",
+          "#3c3489",
+          "#a32d2d",
+          "#7a4a06",
+        ];
+        tbody.innerHTML = ALL_TEACHERS.map((t, i) => {
+          const name =
+            t.fullName ||
+            t.full_name ||
+            t.firstName + " " + t.lastName ||
+            "Unknown";
+          const cls = t.class_stream || t.allocatedClass || "All Classes";
+          const role = t.roleType || t.role_type || "Teacher";
+          const marks = t.marksStatus || "Pending";
+          const marksClass =
+            marks === "Submitted"
+              ? "badge-active"
+              : marks === "Overdue"
+                ? "badge-unpaid"
+                : "badge-pending";
+          const bg = colors[i % colors.length];
+          const tc = tcs[i % tcs.length];
+          return `<tr class="fee-row">
+            <td class="py-3 pr-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full grid place-items-center text-xs font-bold flex-shrink-0" style="background:${bg};color:${tc}">${initials(name)}</div>
+                <div>
+                  <div class="font-medium text-navy">${name}</div>
+                  <div class="text-xs text-muted">${t.email || ""}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 pr-4 text-sm text-muted">${role}</td>
+            <td class="py-3 pr-4"><span class="badge badge-teacher">${cls}</span></td>
+            <td class="py-3 pr-4 text-sm text-muted">${t.subject || t.subjects || "—"}</td>
+            <td class="py-3 pr-4"><span class="badge ${marksClass}">${marks}</span></td>
+            <td class="py-3 pr-4"><span class="badge ${t.active !== false ? "badge-active" : "badge-inactive"}">${t.active !== false ? "Active" : "Inactive"}</span></td>
+            <td class="py-3 text-right">
+              <button onclick="editTeacherStatus('${t.id}')" class="text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-primary hover:text-primary transition">Edit</button>
+            </td>
+          </tr>`;
+        }).join("");
+      }
+
+      window.filterTeachers = function () {
+        const q = document.getElementById("teacher-search").value.toLowerCase();
+        document.querySelectorAll("#teachers-table-body tr").forEach((row) => {
+          row.style.display = row.textContent.toLowerCase().includes(q)
+            ? ""
+            : "none";
+        });
+      };
+
+      window.editTeacherStatus = async function (id) {
+        const teacher = ALL_TEACHERS.find((t) => t.id === id);
+        if (!teacher) return;
+        const name = teacher.fullName || teacher.full_name || "Teacher";
+        const newActive = teacher.active === false ? true : false;
+        if (!confirm(`${newActive ? "Reactivate" : "Deactivate"} ${name}?`))
+          return;
+        try {
+          await updateDoc(doc(db, "users", id), {
+            active: newActive,
+            updatedAt: serverTimestamp(),
+            updatedBy: DIRECTOR.uid,
+          });
+          teacher.active = newActive;
+          renderTeachers();
+          showToast(`${name} ${newActive ? "activated" : "deactivated"}`);
+          await logAudit(
+            `Teacher ${newActive ? "activated" : "deactivated"}`,
+            name,
+            "info",
+          );
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      // ── RENDER STUDENTS ───────────────────────────
+      function renderStudents() {
+        renderStudentsFiltered();
+      }
+      function renderStudentsFiltered() {
+        const tbody = document.getElementById("students-table-body");
+        const search = (
+          document.getElementById("student-search")?.value || ""
+        ).toLowerCase();
+        const cls =
+          document.getElementById("student-class-filter")?.value || "";
+        let filtered = ALL_STUDENTS;
+        if (search)
+          filtered = filtered.filter(
+            (s) =>
+              (s.fullName || s.full_name || "")
+                .toLowerCase()
+                .includes(search) ||
+              (s.adm_number || "").toLowerCase().includes(search),
+          );
+        if (cls)
+          filtered = filtered.filter(
+            (s) => (s.class_stream || s.classStream || "") === cls,
+          );
+        if (!filtered.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="py-8 text-center text-muted text-xs">No students found</td></tr>';
+          return;
+        }
+        const finMap = {};
+        ALL_FINANCE.forEach((f) => (finMap[f.student_id || f.studentId] = f));
+        const termFee = parseInt(SCHOOL_SETTINGS.termFee || 11400);
+        tbody.innerHTML = filtered
+          .map((s) => {
+            const name = s.fullName || s.full_name || "Student";
+            const f = finMap[s.id] || {};
+            const paid = f.amount_paid || 0;
+            const status = feeStatus(paid, termFee);
+            const scls =
+              {
+                paid: "badge-paid",
+                partial: "badge-partial",
+                unpaid: "badge-unpaid",
+              }[status] || "";
+            return `<tr class="fee-row">
+            <td class="py-3 pr-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-primarySoft text-primary grid place-items-center text-xs font-bold flex-shrink-0">${initials(name)}</div>
+                <div>
+                  <div class="font-medium text-navy">${name}</div>
+                  <div class="text-xs text-muted">${s.parent_email || s.parentEmail || ""}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 pr-4 text-sm text-muted font-mono">${s.adm_number || s.admNumber || "—"}</td>
+            <td class="py-3 pr-4"><span class="badge badge-student">${s.class_stream || s.classStream || "—"}</span></td>
+            <td class="py-3 pr-4 text-sm text-muted">${s.gender || "—"}</td>
+            <td class="py-3 pr-4"><span class="badge ${scls}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+            <td class="py-3 text-right">
+              <button onclick="viewStudentFee('${s.id}')" class="text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-primary hover:text-primary transition">View</button>
+            </td>
+          </tr>`;
+          })
+          .join("");
+      }
+
+      window.filterStudents = renderStudentsFiltered;
+
+      window.viewStudentFee = function (id) {
+        const s = ALL_STUDENTS.find((s) => s.id === id);
+        if (!s) return;
+        const name = s.fullName || s.full_name || "Student";
+        const f =
+          ALL_FINANCE.find((f) => (f.student_id || f.studentId) === id) || {}; // Find finance record
+        const termFee = parseInt(SCHOOL_SETTINGS.termFee || 11400);
+        const paid = f.total_paid || 0; // Use schema-defined field name
+        const bal = Math.max(termFee - paid, 0);
+        alert(
+          `📋 ${name}\nAdm: ${s.adm_number || "—"}\nClass: ${s.class_stream || "—"}\nFee: ${fmtCcy(termFee)}\nPaid: ${fmtCcy(paid)}\nBalance: ${fmtCcy(bal)}`,
+        );
+      };
+
+      // ── RENDER CLASSES ────────────────────────────
+      function renderClasses() {
+        const el = document.getElementById("classes-grid");
+        const teacherMap = {};
+        ALL_TEACHERS.forEach(
+          (t) =>
+            (teacherMap[t.class_stream || t.allocatedClass] =
+              t.fullName || t.full_name || t.firstName + " " + t.lastName),
+        );
+        const studentCount = {};
+        CLASSES.forEach((c) => (studentCount[c] = 0));
+        ALL_STUDENTS.forEach((s) => {
+          const c = s.class_stream || s.classStream;
+          if (studentCount[c] !== undefined) studentCount[c]++;
+        });
+        el.innerHTML = CLASSES.map((c, i) => {
+          const teacher = teacherMap[c] || "—";
+          const count = studentCount[c] || 0;
+          return `<div class="rounded-[1.4rem] p-4 border border-slate-100 hover:shadow-card transition bg-white">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wide text-muted">${c}</span>
+              <span class="badge badge-student">${count} students</span>
+            </div>
+            <div class="text-sm font-medium text-navy">${teacher}</div>
+            <div class="text-xs text-muted mt-0.5">Class Teacher</div>
+            <button onclick="activate('students');document.getElementById('student-class-filter').value='${c}';filterStudents()" class="mt-3 text-xs text-primary font-semibold hover:underline">View Students →</button>
+          </div>`;
+        }).join("");
+      }
+
+      // ── RENDER ATTENDANCE ─────────────────────────
+      function renderAttendance() {
+        buildAttendanceChart("att-chart");
+        const tbody = document.getElementById("att-table-body");
+        const teacherMap = {};
+        ALL_TEACHERS.forEach(
+          (t) =>
+            (teacherMap[t.class_stream || t.allocatedClass] =
+              t.fullName || t.full_name || t.firstName + " " + t.lastName),
+        );
+        const studentCount = {};
+        CLASSES.forEach((c) => (studentCount[c] = 0));
+        ALL_STUDENTS.forEach((s) => {
+          const c = s.class_stream || s.classStream;
+          if (studentCount[c] !== undefined) studentCount[c]++;
+        });
+        tbody.innerHTML = CLASSES.map((c) => {
+          const total = studentCount[c] || 0;
+          const pct = 90 + Math.floor(Math.random() * 8);
+          const present = Math.round((total * pct) / 100);
+          const pctClass =
+            pct >= 95
+              ? "text-success"
+              : pct >= 85
+                ? "text-warning"
+                : "text-danger";
+          return `<tr class="fee-row">
+            <td class="py-3 font-medium">${c}</td>
+            <td class="py-3 text-muted text-sm">${teacherMap[c] || "—"}</td>
+            <td class="py-3 text-right">${total}</td>
+            <td class="py-3 text-right text-success font-semibold">${present}</td>
+            <td class="py-3 text-right font-bold ${pctClass}">${pct}%</td>
+          </tr>`;
+        }).join("");
+      }
+
+      // ── RENDER PERFORMANCE ────────────────────────
+      function renderPerformance() {
+        buildPerfCharts();
+        const tbody = document.getElementById("perf-table-body");
+        const teacherMap = {};
+        ALL_TEACHERS.forEach(
+          (t) =>
+            (teacherMap[t.class_stream || t.allocatedClass] =
+              t.fullName || t.full_name || t.firstName + " " + t.lastName),
+        );
+        const studentCount = {};
+        CLASSES.forEach((c) => (studentCount[c] = 0));
+        ALL_STUDENTS.forEach((s) => {
+          const c = s.class_stream || s.classStream;
+          if (studentCount[c] !== undefined) studentCount[c]++;
+        });
+        tbody.innerHTML = CLASSES.map((c) => {
+          const total = studentCount[c] || 0;
+          const avg = 65 + Math.floor(Math.random() * 25);
+          const att = 85 + Math.floor(Math.random() * 13);
+          const avgClass =
+            avg >= 80
+              ? "text-success"
+              : avg >= 60
+                ? "text-[#5B5EF7]"
+                : avg >= 40
+                  ? "text-warning"
+                  : "text-danger";
+          return `<tr class="fee-row">
+            <td class="py-3 font-medium">${c}</td>
+            <td class="py-3 text-sm text-muted">${teacherMap[c] || "—"}</td>
+            <td class="py-3 text-right">${total}</td>
+            <td class="py-3 text-right font-bold ${avgClass}">${avg}%</td>
+            <td class="py-3 text-right">${att}%</td>
+            <td class="py-3 text-center"><span class="badge badge-active">Good</span></td>
+          </tr>`;
+        }).join("");
+      }
+
+      function buildPerfCharts() {
+        destroyChart("perf-subj");
+        destroyChart("perf-cbc");
+        const ctx1 = document.getElementById("perf-subject-chart");
+        if (ctx1) {
+          chartInsts["perf-subj"] = new Chart(ctx1, {
+            type: "bar",
+            data: {
+              labels: [
+                "Maths",
+                "English",
+                "Kiswahili",
+                "Science",
+                "Social Std",
+                "CRE",
+                "Arts",
+                "P.E.",
+              ],
+              datasets: [
+                {
+                  label: "School Avg %",
+                  data: [74, 68, 66, 81, 77, 79, 88, 91],
+                  backgroundColor: [
+                    "#2bb5a0",
+                    "#e08c1a",
+                    "#7f77dd",
+                    "#1a3a5c",
+                    "#d85a30",
+                    "#35B37E",
+                    "#5B5EF7",
+                    "#c9a84c",
+                  ],
+                  borderRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 100,
+                  grid: { color: "#f4f6fb" },
+                  ticks: { font: { size: 10 } },
+                },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+              },
+            },
+          });
+        }
+        const ctx2 = document.getElementById("perf-cbc-chart");
+        if (ctx2) {
+          chartInsts["perf-cbc"] = new Chart(ctx2, {
+            type: "doughnut",
+            data: {
+              labels: ["Exceeding", "Meeting", "Approaching", "Below"],
+              datasets: [
+                {
+                  data: [82, 95, 28, 11],
+                  backgroundColor: ["#35B37E", "#5B5EF7", "#e08c1a", "#e74c3c"],
+                  borderWidth: 0,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: "60%",
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { font: { size: 10 }, boxWidth: 10, padding: 6 },
+                },
+              },
+            },
+          });
+        }
+      }
+
+      // ── RENDER FEES ───────────────────────────────
+      function renderFees() {
+        updateFeeStats();
+        filterFeeTable();
+      }
+
+      window.filterFeeTable = function () {
+        const tbody = document.getElementById("fee-table-body");
+        const cls = document.getElementById("fee-class-filter")?.value || "";
+        const status =
+          document.getElementById("fee-status-filter")?.value || "";
+        const termFee = parseInt(SCHOOL_SETTINGS.termFee || 11400);
+        const finMap = {};
+        ALL_FINANCE.forEach((f) => (finMap[f.student_id || f.studentId] = f));
+        let students = ALL_STUDENTS;
+        if (cls)
+          students = students.filter(
+            // Filter by class
+            (s) => (s.class_stream || s.classStream || "") === cls,
+          );
+        const rows = students.map((s) => {
+          const f = finMap[s.id] || {}; // Get finance record
+          const paid = f.total_paid || 0; // Use schema-defined field name
+          const bal = Math.max(termFee - paid, 0);
+          const st = feeStatus(paid, termFee);
+          return { s, paid, bal, st };
+        });
+        const filtered = status ? rows.filter((r) => r.st === status) : rows;
+        if (!filtered.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="py-8 text-center text-muted text-xs">No records found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered
+          .map(({ s, paid, bal, st }) => {
+            const name = s.fullName || s.full_name || "Student";
+            const scls =
+              {
+                paid: "badge-paid",
+                partial: "badge-partial",
+                unpaid: "badge-unpaid",
+              }[st] || "";
+            return `<tr class="fee-row">
+            <td class="py-3 pr-4">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-primarySoft text-primary grid place-items-center text-xs font-bold">${initials(name)}</div>
+                <span class="font-medium text-navy">${name}</span>
+              </div>
+            </td>
+            <td class="py-3 pr-4 text-sm text-muted">${s.class_stream || s.classStream || "—"}</td>
+            <td class="py-3 pr-4 text-right text-sm">${fmtCcy(termFee)}</td>
+            <td class="py-3 pr-4 text-right text-sm text-success font-semibold">${fmtCcy(paid)}</td>
+            <td class="py-3 pr-4 text-right text-sm ${bal > 0 ? "text-danger font-semibold" : ""}">${fmtCcy(bal)}</td>
+            <td class="py-3 pr-4 text-center"><span class="badge ${scls}">${st.charAt(0).toUpperCase() + st.slice(1)}</span></td>
+            <td class="py-3 text-right">
+              <button onclick="recordFeeFor('${name}')" class="text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-primary hover:text-primary transition">+ Record</button>
+            </td>
+          </tr>`;
+          })
+          .join("");
+      };
+
+      window.recordFeeFor = function (studentId, name) {
+        // Store both ID + name to ensure we update finance/{uid} correctly
+        document.getElementById("fee-student-uid").value = studentId;
+        document.getElementById("fee-student").value = name;
+        openModal("modal-fee-record");
+      };
+
+      // ── RENDER APPROVALS ──────────────────────────
+      function renderApprovals() {
+        filterApprovals();
+      }
+
+      window.filterApprovals = function () {
+        const el = document.getElementById("approvals-list");
+        const type = document.getElementById("approval-filter")?.value || "";
+        let list = ALL_APPROVALS;
+        if (type) list = list.filter((a) => a.type === type);
+        if (!list.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-8">No approvals found</div>';
+          return;
+        }
+        el.innerHTML = list
+          .map((a) => {
+            const stClass =
+              a.status === "approved"
+                ? "badge-approved"
+                : a.status === "rejected"
+                  ? "badge-rejected"
+                  : "badge-pending";
+            return `<div class="approval-card p-4 rounded-2xl border border-slate-100 hover:border-primary/20 transition">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-goldLight text-gold grid place-items-center flex-shrink-0 mt-0.5">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm font-semibold text-navy">${a.text || a.type || "Request"}</span>
+                  <span class="badge badge-general">${a.type || "General"}</span>
+                  <span class="badge ${stClass}">${a.status || "pending"}</span>
+                </div>
+                <div class="text-xs text-muted mt-1">From: ${a.from || "—"} · ${fmtTime(a.createdAt)}</div>
+                ${a.detail ? `<div class="text-xs text-navy mt-1">${a.detail}</div>` : ""}
+              </div>
+              ${
+                a.status === "pending"
+                  ? `
+              <div class="flex gap-2 flex-shrink-0">
+                <button onclick="reviewApproval('${a.id}','approved')" class="px-3 py-1.5 bg-softGreen text-success rounded-xl text-xs font-semibold hover:bg-green-100 transition">✓ Approve</button>
+                <button onclick="reviewApproval('${a.id}','rejected')" class="px-3 py-1.5 bg-softPink text-danger rounded-xl text-xs font-semibold hover:bg-red-100 transition">✗ Reject</button>
+              </div>`
+                  : ""
+              }
+            </div>
+          </div>`;
+          })
+          .join("");
+      };
+
+      window.reviewApproval = async function (id, decision) {
+        try {
+          await updateDoc(doc(db, "approvals", id), {
+            status: decision,
+            reviewedBy: DIRECTOR.uid,
+            reviewedAt: serverTimestamp(),
+          });
+          const idx = ALL_APPROVALS.findIndex((a) => a.id === id);
+          if (idx >= 0) ALL_APPROVALS[idx].status = decision;
+          const pending = ALL_APPROVALS.filter(
+            (a) => a.status === "pending",
+          ).length;
+          document.getElementById("stat-approvals").textContent = pending;
+          document.getElementById("hero-approvals").textContent = pending;
+          const badge = document.getElementById("approval-badge");
+          if (pending > 0) {
+            badge.textContent = pending;
+            badge.classList.remove("hidden");
+          } else badge.classList.add("hidden");
+          renderApprovals();
+          showToast(`Request ${decision} ✓`);
+          await logAudit(
+            `Approval ${decision}`,
+            `ID: ${id}`,
+            decision === "approved" ? "success" : "warning",
+          );
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      // ── RENDER EVENTS ─────────────────────────────
+      function renderEvents() {
+        const el = document.getElementById("events-list");
+        if (!ALL_EVENTS.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-8">No events yet. Add the first one!</div>';
+          return;
+        }
+        const typeColors = {
+          Academic: "#e6f1fb",
+          Sports: "#e1f5ee",
+          Cultural: "#faeeda",
+          Holiday: "#fcebeb",
+          "Parent Day": "#fef3e2",
+          Exam: "#fcebeb",
+        };
+        const typeDots = {
+          Academic: "#5B5EF7",
+          Sports: "#35B37E",
+          Cultural: "#c9a84c",
+          Holiday: "#e74c3c",
+          "Parent Day": "#c9a84c",
+          Exam: "#e74c3c",
+        };
+        el.innerHTML = ALL_EVENTS.map((e) => {
+          const bg = typeColors[e.type] || "#e6f1fb";
+          const dot = typeDots[e.type] || "#5B5EF7";
+          return `<div class="flex items-center gap-4 p-4 rounded-2xl" style="background:${bg}">
+            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background:${dot}"></div>
+            <div class="flex-1">
+              <div class="font-semibold text-navy">${e.title || "Event"}</div>
+              ${e.description ? `<div class="text-xs text-muted mt-0.5">${e.description}</div>` : ""}
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="text-sm font-semibold text-navy">${e.date || "—"}</div>
+              <div class="text-xs text-muted">${e.type || "—"}</div>
+            </div>
+          </div>`;
+        }).join("");
+      }
+
+      // ── RENDER BROADCAST HISTORY ──────────────────
+      function renderBroadcastHistory() {
+        const el = document.getElementById("broadcast-history");
+        if (!ALL_BROADCASTS.length) {
+          el.innerHTML =
+            '<div class="text-xs text-muted text-center py-4">No broadcasts yet</div>';
+          return;
+        }
+        el.innerHTML = ALL_BROADCASTS.map((b) => {
+          const typeClass =
+            b.type === "urgent"
+              ? "badge-urgent"
+              : b.type === "info"
+                ? "badge-info"
+                : "badge-general";
+          return `<div class="p-3 rounded-xl border border-slate-100 space-y-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-semibold text-navy">${b.subject || "Broadcast"}</span>
+              <span class="badge ${typeClass}">${b.type || "general"}</span>
+            </div>
+            <div class="text-xs text-muted">To: ${b.audience || "All"}${b.targetClass && b.targetClass !== "all" ? " (" + b.targetClass + ")" : ""} · ${fmtTime(b.createdAt)}</div>
+            ${b.body ? `<div class="text-xs text-navy/70 line-clamp-2">${b.body}</div>` : ""}
+          </div>`;
+        }).join("");
+      }
+
+      // ── RENDER AUDIT ──────────────────────────────
+      function renderAuditLog() {
+        filterAudit();
+      }
+
+      window.filterAudit = function () {
+        const tbody = document.getElementById("audit-table-body");
+        const level = document.getElementById("audit-filter")?.value || "";
+        let list = ALL_AUDIT;
+        if (level) list = list.filter((a) => a.level === level);
+        if (!list.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="py-8 text-center text-muted text-xs">No audit entries found</td></tr>';
+          return;
+        }
+        const lvlClass = {
+          info: "badge-info",
+          success: "badge-active",
+          warning: "badge-pending",
+        };
+        tbody.innerHTML = list
+          .slice(0, 50)
+          .map(
+            (a) => `
+          <tr class="fee-row">
+            <td class="py-3 pr-4 text-xs text-muted whitespace-nowrap">${fmtTime(a.createdAt)}</td>
+            <td class="py-3 pr-4 text-sm font-medium text-navy">${a.action || "—"}</td>
+            <td class="py-3 pr-4 text-sm text-muted">${a.actor || a.actorUid || "—"}</td>
+            <td class="py-3 pr-4 text-xs text-muted">${a.detail || "—"}</td>
+            <td class="py-3 text-center"><span class="badge ${lvlClass[a.level || "info"] || "badge-info"}">${a.level || "info"}</span></td>
+          </tr>`,
+          )
+          .join("");
+      };
+
+      // ── RENDER SETTINGS ───────────────────────────
+      function renderSettings() {
+        try {
+          const pid = auth?.app?.options?.projectId || "Not configured";
+          document.getElementById("fb-project-id").textContent = pid;
+        } catch (e) {}
+      }
+
+      // ── SAVE FUNCTIONS ────────────────────────────
+
+      window.saveProfile = async function () {
+        const name = document.getElementById("prof-name").value.trim();
+        const phone = document.getElementById("prof-phone").value.trim();
+        if (!name) {
+          showToast("Name is required");
+          return;
+        }
+        try {
+          await setDoc(
+            doc(db, "users", DIRECTOR.uid),
+            {
+              displayName: name,
+              fullName: name,
+              phone,
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true },
+          );
+          showToast("Profile saved ✓");
+          document.getElementById("sb-name").textContent = name;
+          document.getElementById("prof-display-name").textContent = name;
+          const ini = initials(name);
+          document.getElementById("sb-avatar").textContent = ini;
+          document.getElementById("top-avatar").textContent = ini;
+          document.getElementById("prof-avatar").textContent = ini;
+          await logAudit("Director profile updated", name, "info");
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      window.saveSchoolSettings = async function () {
+        const settings = {
+          schoolName: document
+            .getElementById("setting-school-name")
+            .value.trim(),
+          term: document.getElementById("setting-term").value,
+          curriculum: document.getElementById("setting-curriculum").value,
+          termFee: parseInt(
+            document.getElementById("setting-term-fee").value || 11400,
+          ),
+          subCounty: document.getElementById("setting-subcounty").value.trim(),
+          updatedAt: serverTimestamp(),
+          updatedBy: DIRECTOR.uid,
+        };
+        try {
+          await setDoc(doc(db, "settings", "school"), settings, {
+            merge: true,
+          });
+          Object.assign(SCHOOL_SETTINGS, settings);
+          showToast("School settings saved ✓");
+          await logAudit(
+            "School settings updated",
+            settings.schoolName,
+            "info",
+          );
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      window.saveTeacher = async function () {
+        const btn = document.getElementById("btn-save-teacher");
+        const errEl = document.getElementById("add-teacher-err");
+        errEl.classList.add("hidden");
+        const fname = document.getElementById("t-fname").value.trim();
+        const lname = document.getElementById("t-lname").value.trim();
+        const email = document.getElementById("t-email").value.trim();
+        const password = document.getElementById("t-password").value.trim();
+        const phone = document.getElementById("t-phone").value.trim();
+        const roleType = document.getElementById("t-role-type").value;
+        const cls = document.getElementById("t-class").value;
+        const subjects = document.getElementById("t-subjects").value.trim();
+        const tsc = document.getElementById("t-tsc").value.trim();
+        const qual = document.getElementById("t-qual").value;
+        const doj = document.getElementById("t-doj").value;
+        if (!fname || !lname || !email || !password || !roleType || !cls) {
+          errEl.textContent = "Please fill in all required fields (*)";
+          errEl.classList.remove("hidden");
+          return;
+        }
+        if (password.length < 6) {
+          errEl.textContent = "Password must be at least 6 characters.";
+          errEl.classList.remove("hidden");
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Creating account...";
+        let secondaryApp;
+        try {
+          // 1. Create Auth account using secondary app instance (avoids logging director out)
+          secondaryApp = initializeApp(auth.app.options, "SecondaryTeacher");
+          const secondaryAuth = getAuth(secondaryApp);
+          const cred = await createUserWithEmailAndPassword(
+            secondaryAuth,
+            email,
+            password,
+          );
+          const uid = cred.user.uid;
+
+          // 2. Save teacher data to Firestore using UID as Document ID
+          const teacherData = {
+            fullName: fname + " " + lname,
+            firstName: fname,
+            lastName: lname,
+            email,
+            phone,
+            roleType,
+            class_stream: cls,
+            allocatedClass: cls,
+            subject: subjects,
+            tsc,
+            qualification: qual,
+            dateOfJoining: doj,
+            role: "teacher",
+            active: true,
+            marksStatus: "Pending",
+            createdBy: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          };
+          await setDoc(doc(db, "users", uid), teacherData);
+
+          ALL_TEACHERS.push({ id: uid, ...teacherData });
+          document.getElementById("stat-teachers").textContent =
+            ALL_TEACHERS.length;
+          document.getElementById("hero-teachers").textContent =
+            ALL_TEACHERS.length;
+          closeModal("modal-add-teacher");
+          showToast("Teacher added successfully ✓");
+          if (
+            document
+              .getElementById("view-teachers")
+              .classList.contains("active")
+          )
+            renderTeachers();
+          await logAudit("Teacher added", fname + " " + lname, "success");
+          [
+            "t-fname",
+            "t-lname",
+            "t-email",
+            "t-phone",
+            "t-subjects",
+            "t-tsc",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+        } catch (e) {
+          errEl.textContent = "Error: " + e.message;
+          errEl.classList.remove("hidden");
+        }
+        btn.disabled = false;
+        btn.innerHTML = "💾 Save to Firestore";
+      };
+
+      window.openAddStudentModal = function () {
+        const body = document.getElementById("add-student-modal-body");
+        body.innerHTML = `<div class="space-y-3">
+          <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Full Name *</label>
+          <input id="ns-fullName" type="text" placeholder="John Doe" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Adm Number *</label>
+            <input id="ns-admNumber" type="text" placeholder="ADM001" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"></div>
+            <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Class *</label>
+            <select id="ns-classStream" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50">
+              <option value="">Select Class</option>${CLASSES.map((c) => `<option>${c}</option>`).join("")}
+            </select></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Gender</label>
+            <select id="ns-gender" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"><option value="">—</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+            <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Date of Birth</label>
+            <input id="ns-dob" type="date" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"></div>
+          </div>
+          <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Parent/Guardian Name</label>
+          <input id="ns-parentName" type="text" placeholder="Parent Name" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Parent Phone</label>
+            <input id="ns-parentPhone" type="tel" placeholder="07XXXXXXXX" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"></div>
+            <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Parent Email *</label>
+            <input id="ns-parentEmail" type="email" placeholder="parent@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"></div>
+          </div>
+          <div><label class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">House</label>
+          <select id="ns-house" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"><option value="">—</option><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option></select></div>
+          <div class="flex gap-3 pt-2">
+            <button onclick="saveNewStudent()" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow">Save Student</button>
+            <button onclick="closeModal('modal-add-student')" class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition">Cancel</button>
+          </div>
+        </div>`;
+        openModal("modal-add-student");
+      };
+
+      window.saveNewStudent = async function () {
+        const fullName = document.getElementById("ns-fullName").value.trim();
+        const admNumber = document.getElementById("ns-admNumber").value.trim();
+        const classStream = document.getElementById("ns-classStream").value;
+        const gender = document.getElementById("ns-gender").value;
+        const dob = document.getElementById("ns-dob").value;
+        const parentName = document
+          .getElementById("ns-parentName")
+          .value.trim();
+        const parentPhone = document
+          .getElementById("ns-parentPhone")
+          .value.trim();
+        const parentEmail = document
+          .getElementById("ns-parentEmail")
+          .value.trim();
+        const house = document.getElementById("ns-house").value;
+        if (!fullName || !admNumber || !classStream || !parentEmail) {
+          alert("Please fill required fields (*).");
+          return;
+        }
+        if (ALL_STUDENTS.find((s) => (s.adm_number || "") === admNumber)) {
+          alert("Admission number already exists!");
+          return;
+        }
+        const tempPassword = admNumber.toUpperCase();
+        let secondaryApp;
+        try {
+          // Create Auth account for student/parent
+          secondaryApp = initializeApp(auth.app.options, "SecondaryStudent");
+          const secondaryAuth = getAuth(secondaryApp);
+          const cred = await createUserWithEmailAndPassword(
+            secondaryAuth,
+            parentEmail,
+            tempPassword,
+          );
+          const uid = cred.user.uid;
+
+          const data = {
+            fullName,
+            adm_number: admNumber,
+            class_stream: classStream,
+            gender,
+            dob,
+            parent_name: parentName,
+            parent_phone: parentPhone,
+            parent_email: parentEmail,
+            house,
+            role: "student",
+            temp_password: tempPassword,
+            createdBy: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          };
+          await setDoc(doc(db, "users", uid), data);
+          ALL_STUDENTS.push({ id: uid, ...data });
+          updateStudentStats();
+          populateStudentDatalist();
+          closeModal("modal-add-student");
+          showToast("Student enrolled ✓");
+          if (
+            document
+              .getElementById("view-students")
+              .classList.contains("active")
+          )
+            renderStudents();
+          await logAudit("Student enrolled", fullName, "success");
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      window.saveFeePayment = async function () {
+        const student = document.getElementById("fee-student").value.trim();
+        const amount = parseFloat(document.getElementById("fee-amount").value);
+        const date = document.getElementById("fee-date").value;
+        const method = document.getElementById("fee-method").value;
+        const ref = document.getElementById("fee-ref").value.trim();
+        if (!student || !amount || !date) {
+          alert("Student, amount and date are required.");
+          return;
+        }
+        const studentObj = ALL_STUDENTS.find(
+          (s) => (s.fullName || s.full_name || "") === student,
+        );
+        try {
+          const payData = {
+            student_name: student,
+            student_id: studentObj?.id || null,
+            amount, // This is the amount of the current payment
+            date,
+            method,
+            reference: ref,
+            recorded_by: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          };
+          await addDoc(collection(db, "fee_payments"), payData);
+
+          // Update finance record in the 'finance' collection (main record for student portal)
+          if (studentObj) {
+            const existing = ALL_FINANCE.find(
+              (f) => (f.student_id || f.studentId) === studentObj.id,
+            );
+            if (existing) {
+              await updateDoc(doc(db, "finance", existing.id), {
+                total_paid: (existing.total_paid || 0) + amount, // Update total_paid
+                payment_history: [
+                  // Add to payment_history array
+                  ...(existing.payment_history || []),
+                  {
+                    date: new Date(date),
+                    mode: method,
+                    amount: amount,
+                    ref: ref,
+                  }, // Store as Date object
+                ],
+                updatedAt: serverTimestamp(),
+              });
+              // Update in-memory data
+              existing.total_paid = (existing.total_paid || 0) + amount;
+              existing.payment_history = [
+                ...(existing.payment_history || []),
+                {
+                  date: new Date(date),
+                  mode: method,
+                  amount: amount,
+                  ref: ref,
+                },
+              ];
+            } else {
+              const newFin = {
+                student_id: studentObj.id,
+                studentName: studentObj.fullName || studentObj.full_name,
+                studentClass: studentObj.class_stream || studentObj.classStream,
+                total_paid: amount, // Initial paid amount
+                termly_total: parseInt(SCHOOL_SETTINGS.termFee || 11400), // Initial total fee
+                payment_history: [
+                  {
+                    date: new Date(date),
+                    mode: method,
+                    amount: amount,
+                    ref: ref,
+                  },
+                ], // Initial payment
+                updatedAt: serverTimestamp(),
+              };
+              const fRef = await addDoc(collection(db, "finance"), newFin);
+              ALL_FINANCE.push({ id: fRef.id, ...newFin });
+            }
+          }
+          updateFeeStats();
+          closeModal("modal-fee-record");
+          showToast(`Payment of ${fmtCcy(amount)} recorded for ${student} ✓`);
+          if (document.getElementById("view-fees").classList.contains("active"))
+            renderFees();
+          await logAudit(
+            "Fee payment recorded",
+            `${student} — ${fmtCcy(amount)} via ${method}`,
+            "success",
+          );
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      async function broadcastData(
+        audience,
+        subject,
+        type,
+        body,
+        targetClass = "all",
+      ) {
+        if (!subject || !body) {
+          alert("Subject and message are required.");
+          return false;
+        }
+        try {
+          const bcData = {
+            audience,
+            targetClass,
+            subject,
+            type,
+            body,
+            sentBy: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          };
+          const ref = await addDoc(collection(db, "broadcasts"), bcData);
+          ALL_BROADCASTS.unshift({ id: ref.id, ...bcData });
+
+          // Map audience to target roles
+          let targetRole = [];
+          if (audience === "all") targetRole = ["student", "teacher"];
+          else if (audience === "teachers") targetRole = ["teacher"];
+          else if (audience === "students") targetRole = ["student"];
+          else if (audience === "parents") targetRole = ["student"];
+
+          await addDoc(collection(db, "notices"), {
+            title: subject,
+            body,
+            type,
+            postedBy:
+              DIRECTOR.displayName ||
+              DIRECTOR.fullName ||
+              DIRECTOR.email ||
+              "Director",
+            postedByRole: "Director",
+            targetRole: targetRole,
+            targetClass: targetClass,
+            createdAt: serverTimestamp(),
+          });
+          showToast(`Broadcast sent to ${audience} ✓`);
+          renderBroadcastHistory();
+          renderBroadcastPreview();
+          await logAudit(
+            "Broadcast sent",
+            `To: ${audience}${targetClass !== "all" ? " (" + targetClass + ")" : ""} — ${subject}`,
+            "success",
+          );
+          return true;
+        } catch (e) {
+          alert("Error: " + e.message);
+          return false;
+        }
+      }
+
+      window.sendBroadcast = async function () {
+        const audience = document.getElementById("bc-audience").value;
+        const targetClass = document.getElementById("bc-class").value;
+        const subject = document.getElementById("bc-subject").value.trim();
+        const type = document.getElementById("bc-type").value;
+        const body = document.getElementById("bc-body").value.trim();
+        if (await broadcastData(audience, subject, type, body, targetClass)) {
+          closeModal("modal-broadcast");
+          ["bc-subject", "bc-body"].forEach(
+            (id) => (document.getElementById(id).value = ""),
+          );
+        }
+      };
+
+      window.sendBroadcast2 = async function () {
+        const audience = document.getElementById("bc2-audience").value;
+        const targetClass = document.getElementById("bc2-class").value;
+        const subject = document.getElementById("bc2-subject").value.trim();
+        const type = document.getElementById("bc2-type").value;
+        const body = document.getElementById("bc2-body").value.trim();
+        if (await broadcastData(audience, subject, type, body, targetClass)) {
+          ["bc2-subject", "bc2-body"].forEach(
+            (id) => (document.getElementById(id).value = ""),
+          );
+        }
+      };
+
+      window.saveEvent = async function () {
+        const title = document.getElementById("ev-title").value.trim();
+        const date = document.getElementById("ev-date").value;
+        const type = document.getElementById("ev-type").value;
+        const description = document.getElementById("ev-desc").value.trim();
+        if (!title || !date) {
+          alert("Title and date are required.");
+          return;
+        }
+        try {
+          const evData = {
+            title,
+            date,
+            type,
+            description,
+            createdBy: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          };
+          const ref = await addDoc(collection(db, "school_events"), evData);
+          ALL_EVENTS.push({ id: ref.id, ...evData });
+          ALL_EVENTS.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+          closeModal("modal-event");
+          showToast(`Event "${title}" saved ✓`);
+          if (
+            document.getElementById("view-events").classList.contains("active")
+          )
+            renderEvents();
+          await logAudit("School event added", `${title} — ${date}`, "info");
+        } catch (e) {
+          alert("Error: " + e.message);
+        } finally {
+          if (secondaryApp) await deleteApp(secondaryApp);
+        }
+      };
+
+      async function logAudit(action, detail, level = "info") {
+        try {
+          await addDoc(collection(db, "audit_log"), {
+            action,
+            detail,
+            level,
+            actor: DIRECTOR.displayName || DIRECTOR.email || "Director",
+            actorUid: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          });
+        } catch (e) {}
+      }
+
+      window.confirmLogout = function () {
+        if (confirm("Sign out of the Director Panel?")) {
+          signOut(auth).catch(() => {});
+          window.location.href = "login.html";
+        }
+      };
+
+      // Set date inputs default to today
+      ["fee-date", "ev-date", "t-doj"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = new Date().toISOString().split("T")[0];
+      });
+    </script>
+  </body>
+</html>

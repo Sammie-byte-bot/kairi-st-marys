@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kairi St Mary's | Student Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { bg:"#F4F6FB",card:"#FFFFFF",primary:"#5B5EF7",navy:"#23384F",muted:"#6B7A90",success:"#35B37E",warning:"#F39C52",danger:"#E86D6D",softBlue:"#EDF2FF",softGreen:"#EAF9F1",softPink:"#FFF0F0",softYellow:"#FFF7E9",softPurple:"#F3EEFF" },
+        boxShadow:{ card:"0 10px 30px rgba(31,41,55,0.08)" },
+      }},
+    };
+  </script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+    *{box-sizing:border-box} body{font-family:"DM Sans",sans-serif}
+    .scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
+    .view{display:none}.view.active{display:block}
+    .nav-btn{transition:all .18s;cursor:pointer}
+    .perf-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em}
+    .perf-ee{background:#eaf9f1;color:#1a7a50}.perf-me{background:#edf2ff;color:#3b4fbe}.perf-ae{background:#fff7e9;color:#9c6012}.perf-be{background:#fff0f0;color:#b83a3a}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .anim{animation:fadeUp .4s ease both}
+    .progress-bar{height:6px;background:#e8ecf2;border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;border-radius:999px}
+    .heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .hm-cell{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
+    .hm-present{background:#eaf9f1;color:#1a7a50}.hm-absent{background:#fff0f0;color:#b83a3a}.hm-weekend{background:#f1f4f9;color:#bcc5d0}.hm-hdr{background:transparent;color:#8a97a8;font-size:9px;font-weight:700}
+    #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(35,56,79,.45);z-index:90}
+    @media(max-width:1023px){#sidebar{transform:translateX(-100%);transition:transform .25s;position:fixed;z-index:100;height:100vh}#sidebar.open{transform:translateX(0)}#sidebar-overlay.show{display:block}}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f4f9}.info-row:last-child{border-bottom:none}
+    #fb-loading{position:fixed;inset:0;background:rgba(244,246,251,.97);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+    @keyframes fb-spin{to{transform:rotate(360deg)}}
+    .fb-spinner{width:46px;height:46px;border:4px solid #edf2ff;border-top-color:#5b5ef7;border-radius:50%;animation:fb-spin .75s linear infinite}
+  </style>
+</head>
+<body class="bg-bg text-navy">
+<div id="fb-loading"><div class="fb-spinner"></div><div id="fb-load-msg" style="color:#23384f;font-weight:600;font-size:15px">Loading your portal…</div></div>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="min-h-screen p-3 md:p-4">
+ <div class="min-h-[calc(100vh-1.5rem)] rounded-[2rem] bg-[#F1F3F8] p-3 md:p-4 shadow-inner">
+  <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 min-h-[calc(100vh-2.5rem)]">
+
+   <!-- SIDEBAR -->
+   <aside id="sidebar" class="bg-white rounded-[1.8rem] shadow-card p-4 flex flex-col">
+    <div class="flex items-center gap-3 px-2 py-2 mb-6">
+     <div class="w-11 h-11 rounded-2xl bg-primary text-white grid place-items-center shadow-lg">
+      <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3L2 9l10 6 10-6-10-6zM2 17l10 6 10-6M2 13l10 6 10-6"/></svg>
+     </div>
+     <div><div class="font-semibold leading-tight" style="font-family:'Playfair Display',serif">Kairi St Mary's</div><div class="text-xs text-muted">Student Portal</div></div>
+    </div>
+    <nav class="space-y-1 text-[15px] font-medium flex-1 overflow-y-auto scrollbar-hide">
+     <div class="px-4 py-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase">Main</div>
+     <button data-view="dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-softBlue text-primary"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h7V3H3v9Zm11 9h7v-6h-7v6ZM14 3v9h7V3h-7ZM3 21h7v-6H3v6Z"/></svg>Dashboard</button>
+     <button data-view="profile" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>My Profile</button>
+     <div class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase">Academic</div>
+     <button data-view="academics" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 14l3-3 3 2 6-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 6h2v2"/></svg>Academics</button>
+     <button data-view="attendance" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v16H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v4M16 3v4M4 9h16"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2 2 4-4"/></svg>Attendance</button>
+     <button data-view="reports" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8M8 13h5"/></svg>Reports</button>
+     <button data-view="timetable" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><rect x="3" y="3" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18M9 21V9"/></svg>Timetable</button>
+     <div class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase">Finance</div>
+     <button data-view="fees" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 10h20"/></svg>Fees Portal</button>
+     <div class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase">School</div>
+     <button data-view="notices" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 21h4"/></svg>Notices<span id="notices-badge" class="ml-auto w-5 h-5 rounded-full bg-danger text-white text-[10px] font-bold grid place-items-center hidden">0</span></button>
+     <button data-view="calendar" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v16H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v4M16 3v4M4 9h16"/></svg>Calendar</button>
+    </nav>
+    <div class="mt-4 rounded-[1.6rem] bg-softPurple p-4">
+     <div class="flex items-center gap-3">
+      <div id="sb-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#8B91F9] to-[#5B5EF7] text-white grid place-items-center font-bold text-lg">?</div>
+      <div><div id="sb-name" class="font-semibold text-sm leading-tight">Loading…</div><div id="sb-meta" class="text-xs text-muted">—</div></div>
+     </div>
+     <div class="mt-3 flex gap-4 text-xs text-muted"><span>Term: <b class="text-navy">2</b></span><span>Year: <b class="text-navy">2025</b></span></div>
+     <button onclick="handleLogout()" class="mt-3 w-full py-2 rounded-xl text-xs font-semibold text-center bg-white text-muted hover:bg-slate-100 transition">Sign out</button>
+    </div>
+   </aside>
+
+   <!-- MAIN -->
+   <main class="bg-[#F7F8FC] rounded-[1.8rem] p-4 md:p-5 overflow-hidden min-h-[calc(100vh-4.5rem)] flex flex-col">
+    <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5">
+     <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-full bg-white shadow-card grid place-items-center"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2] text-navy"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div><div id="welcome-heading" class="text-[22px] md:text-[26px] font-semibold leading-tight">Welcome back!</div><div id="currentDate" class="text-sm text-muted mt-1">Loading…</div></div>
+     </div>
+     <div class="flex items-center gap-3">
+      <button class="w-10 h-10 rounded-full bg-white shadow-card grid place-items-center relative"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2] text-navy"><path stroke-linecap="round" stroke-linejoin="round" d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 21h4"/></svg><span id="notif-dot" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger hidden"></span></button>
+      <div id="top-avatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-[#8B91F9] to-[#5B5EF7] text-white grid place-items-center font-bold text-sm">?</div>
+     </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto scrollbar-hide">
+
+     <!-- DASHBOARD -->
+     <div id="view-dashboard" class="view active space-y-4">
+      <div class="grid grid-cols-2 xl:grid-cols-5 gap-3">
+       <div class="rounded-[1.4rem] bg-[#EDF2FF] p-4 shadow-card anim" style="animation-delay:.05s"><div class="flex items-center gap-2 text-xs text-muted"><span class="w-8 h-8 rounded-xl bg-primary text-white grid place-items-center"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3L2 9l10 6 10-6-10-6zM2 17l10 6 10-6"/></svg></span>Learning Areas</div><div id="stat-subjects" class="text-[34px] font-semibold mt-2">—</div><div class="h-1.5 bg-primary rounded-full w-20 mt-3"></div></div>
+       <div class="rounded-[1.4rem] bg-[#EEF6FF] p-4 shadow-card anim" style="animation-delay:.1s"><div class="flex items-center gap-2 text-xs text-muted"><span class="w-8 h-8 rounded-xl bg-[#2D7DD2] text-white grid place-items-center"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4z"/></svg></span>Attendance</div><div id="stat-attendance" class="text-[34px] font-semibold mt-2">—</div><div class="h-1.5 bg-[#2D7DD2] rounded-full w-16 mt-3"></div></div>
+       <div class="rounded-[1.4rem] bg-[#FFF1EC] p-4 shadow-card anim" style="animation-delay:.15s"><div class="flex items-center gap-2 text-xs text-muted"><span class="w-8 h-8 rounded-xl bg-[#E56A4D] text-white grid place-items-center"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-[2]"><rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 10h20"/></svg></span>Fees Balance</div><div id="stat-fees" class="text-[34px] font-semibold mt-2">—</div><div class="h-1.5 bg-[#E56A4D] rounded-full w-12 mt-3"></div></div>
+       <div class="rounded-[1.4rem] bg-[#EEFAF4] p-4 shadow-card anim" style="animation-delay:.2s"><div class="flex items-center gap-2 text-xs text-muted"><span class="w-8 h-8 rounded-xl bg-success text-white grid place-items-center"><svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 14l3-3 3 2 6-7"/></svg></span>Overall Grade</div><div id="stat-grade" class="text-[34px] font-semibold mt-2">—</div><div class="h-1.5 bg-success rounded-full w-20 mt-3"></div></div>
+       <div class="rounded-[1.4rem] bg-white shadow-card p-4 flex items-center gap-4 anim" style="animation-delay:.25s"><div id="dash-avatar" class="w-14 h-14 rounded-3xl bg-gradient-to-br from-[#8B91F9] to-[#5B5EF7] text-white grid place-items-center font-bold text-xl">?</div><div><div id="dash-name" class="font-semibold text-base">—</div><div id="dash-adm" class="text-xs text-muted">—</div><div class="mt-2 flex gap-4 text-xs text-muted"><span>Class: <b id="dash-class" class="text-navy">—</b></span><span>House: <b id="dash-house" class="text-navy">—</b></span></div></div></div>
+      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-[1.05fr_1fr_0.9fr] gap-4">
+       <div class="bg-white rounded-[1.6rem] shadow-card p-4 anim" style="animation-delay:.3s"><div class="flex items-center justify-between mb-4"><div class="font-semibold">CBC Gradebook – Term 2</div><button data-view="academics" class="nav-link text-sm text-muted px-3 py-1.5 rounded-full bg-[#F4F6FB]">View all</button></div><div class="space-y-2" id="dashGradebook"><div class="text-xs text-muted py-4 text-center">Loading grades…</div></div></div>
+       <div class="bg-white rounded-[1.6rem] shadow-card p-4 anim" style="animation-delay:.35s">
+        <div class="font-semibold mb-4">Performance Overview</div>
+        <div class="flex items-center justify-center py-3"><div class="relative w-44 h-44"><canvas id="donutCanvas"></canvas><div class="absolute inset-0 grid place-items-center text-center pointer-events-none"><div><div id="donut-grade" class="text-3xl font-semibold">—</div><div class="text-[10px] text-muted mt-0.5">CBC Level</div></div></div></div></div>
+        <div class="flex justify-center gap-4 text-xs flex-wrap"><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#5B5EF7] inline-block"></i>EE</span><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#F39C52] inline-block"></i>ME</span><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#35B37E] inline-block"></i>AE</span><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#E86D6D] inline-block"></i>BE</span></div>
+       </div>
+       <div class="bg-white rounded-[1.6rem] shadow-card p-4 anim" style="animation-delay:.4s">
+        <div class="flex items-center justify-between mb-3"><button id="cal-prev" class="text-xl text-slate-400">‹</button><div class="font-semibold" id="cal-month-label">—</div><button id="cal-next" class="text-xl text-slate-400">›</button></div>
+        <div class="grid grid-cols-7 text-center text-xs font-semibold text-slate-400 mb-2"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div>
+        <div id="mini-cal-body" class="grid grid-cols-7 gap-y-2 text-center text-sm"></div>
+       </div>
+      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-[1.4fr_0.8fr] gap-4">
+       <div class="bg-white rounded-[1.6rem] shadow-card p-4 overflow-x-auto anim" style="animation-delay:.45s"><div class="flex items-center justify-between mb-3"><div class="font-semibold">Teacher Remarks</div><button data-view="academics" class="nav-link px-3 py-1.5 rounded-full bg-[#F4F6FB] text-sm text-muted">View all</button></div><table class="w-full text-sm"><thead><tr class="text-left border-b text-slate-500"><th class="py-3 font-medium">Subject</th><th class="font-medium">Teacher</th><th class="font-medium">Grade</th><th class="font-medium">Remark</th></tr></thead><tbody id="remarksTable"><tr><td colspan="4" class="py-6 text-center text-xs text-muted">Loading…</td></tr></tbody></table></div>
+       <div class="bg-white rounded-[1.6rem] shadow-card p-4 anim" style="animation-delay:.5s"><div class="flex items-center justify-between mb-3"><div class="font-semibold">Today's Schedule</div><button data-view="timetable" class="nav-link px-3 py-1.5 rounded-full bg-[#F4F6FB] text-sm text-muted">View all</button></div><div class="space-y-3 text-sm" id="todaySchedule"><div class="text-xs text-muted py-4 text-center">Loading…</div></div></div>
+      </div>
+     </div>
+
+     <!-- PROFILE -->
+     <div id="view-profile" class="view space-y-4">
+      <div class="grid grid-cols-1 xl:grid-cols-[1fr_1.4fr] gap-4">
+       <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim"><div class="flex flex-col items-center text-center pb-5 border-b border-slate-100"><div id="profile-avatar" class="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8B91F9] to-[#5B5EF7] text-white grid place-items-center font-bold text-3xl mb-3">?</div><div id="profile-name" class="font-semibold text-xl">—</div><div id="profile-meta" class="text-sm text-muted mt-1">—</div><span id="profile-level-pill" class="perf-pill perf-me mt-3">—</span></div><div class="mt-4" id="profileInfo"></div></div>
+       <div class="space-y-4">
+        <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim" style="animation-delay:.1s"><div class="font-semibold mb-4">Guardian / Parent Info</div><div id="guardianInfo"></div></div>
+        <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim" style="animation-delay:.15s"><div class="font-semibold mb-4">Transport & House</div><div id="transportInfo"></div></div>
+       </div>
+      </div>
+     </div>
+
+     <!-- ACADEMICS -->
+     <div id="view-academics" class="view space-y-4">
+      <div class="grid grid-cols-1 xl:grid-cols-[1.4fr_0.8fr] gap-4">
+       <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim overflow-x-auto"><div class="font-semibold text-lg mb-1">CBC Gradebook</div><div class="text-xs text-muted mb-4">All terms · 2024–2025</div><table class="w-full text-sm"><thead><tr class="text-left border-b text-slate-500 text-xs"><th class="py-3 font-semibold">Learning Area</th><th class="font-semibold text-center">T1</th><th class="font-semibold text-center">T2</th><th class="font-semibold text-center">T3</th><th class="font-semibold">Teacher</th><th class="font-semibold">Remarks</th></tr></thead><tbody id="fullGradebook"><tr><td colspan="6" class="py-8 text-center text-sm text-muted">Loading…</td></tr></tbody></table></div>
+       <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim" style="animation-delay:.1s"><div class="font-semibold mb-1">Term Progress</div><div class="text-xs text-muted mb-4">Performance trend across terms</div><canvas id="progressChart" height="220"></canvas><div class="mt-4 space-y-2"><div class="flex items-center justify-between text-xs"><span class="text-muted">Overall Term 1</span><span id="t1-overall" class="font-semibold perf-pill perf-me">—</span></div><div class="flex items-center justify-between text-xs"><span class="text-muted">Overall Term 2</span><span id="t2-overall" class="font-semibold perf-pill perf-ee">—</span></div><div class="flex items-center justify-between text-xs"><span class="text-muted">Overall Term 3</span><span class="font-semibold text-slate-300">Pending</span></div></div></div>
+      </div>
+      <div class="bg-white rounded-[1.6rem] shadow-card p-4 anim" style="animation-delay:.2s"><div class="font-semibold mb-3">CBC Performance Level Key</div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"><div class="rounded-2xl bg-[#EAF9F1] p-3"><span class="perf-pill perf-ee mb-2 inline-block">EE</span><div class="text-xs text-muted">Exceeding Expectations — 80–100%</div></div><div class="rounded-2xl bg-[#EDF2FF] p-3"><span class="perf-pill perf-me mb-2 inline-block">ME</span><div class="text-xs text-muted">Meeting Expectations — 60–79%</div></div><div class="rounded-2xl bg-[#FFF7E9] p-3"><span class="perf-pill perf-ae mb-2 inline-block">AE</span><div class="text-xs text-muted">Approaching Expectations — 40–59%</div></div><div class="rounded-2xl bg-[#FFF0F0] p-3"><span class="perf-pill perf-be mb-2 inline-block">BE</span><div class="text-xs text-muted">Below Expectations — Below 40%</div></div></div></div>
+     </div>
+
+     <!-- ATTENDANCE -->
+     <div id="view-attendance" class="view space-y-4">
+      <div class="grid grid-cols-1 xl:grid-cols-[1.4fr_0.8fr] gap-4">
+       <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim"><div class="font-semibold text-lg mb-1">Attendance Record</div><div class="text-xs text-muted mb-4">Term 2, 2025 · This month</div><div class="grid grid-cols-3 gap-3 mb-5"><div class="rounded-2xl bg-softGreen p-4 text-center"><div id="att-present" class="text-3xl font-semibold text-success">—</div><div class="text-xs text-muted mt-1">Days Present</div></div><div class="rounded-2xl bg-softPink p-4 text-center"><div id="att-absent" class="text-3xl font-semibold text-danger">—</div><div class="text-xs text-muted mt-1">Days Absent</div></div><div class="rounded-2xl bg-softBlue p-4 text-center"><div id="att-rate" class="text-3xl font-semibold text-primary">—</div><div class="text-xs text-muted mt-1">Attendance Rate</div></div></div><div class="mb-3 text-sm font-semibold">Attendance Heatmap</div><div class="heatmap" id="heatmapFull"></div><div class="flex gap-4 mt-3 text-xs text-muted"><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#EAF9F1] border border-[#35B37E] inline-block"></i>Present</span><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#FFF0F0] border border-[#E86D6D] inline-block"></i>Absent</span><span class="flex items-center gap-1.5"><i class="w-3 h-3 rounded bg-[#F1F4F9] inline-block"></i>Weekend</span></div></div>
+       <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim" style="animation-delay:.1s"><div class="font-semibold mb-1">Absence Log</div><div class="text-xs text-muted mb-4">Teacher-recorded absences</div><div class="space-y-3" id="absenceLog"><div class="text-xs text-muted py-6 text-center">Loading…</div></div></div>
+      </div>
+     </div>
+
+     <!-- REPORTS -->
+     <div id="view-reports" class="view space-y-4">
+      <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim"><div class="font-semibold text-lg mb-1">Progress Reports</div><div class="text-xs text-muted mb-5">Official term reports issued by the school</div><div class="space-y-3" id="reportsList"><div class="text-xs text-muted py-6 text-center">Loading…</div></div></div>
+     </div>
+
+     <!-- TIMETABLE -->
+     <div id="view-timetable" class="view space-y-4">
+      <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim overflow-x-auto"><div class="font-semibold text-lg mb-1">Weekly Timetable</div><div class="text-xs text-muted mb-5">Term 2, 2025</div><table class="w-full text-sm min-w-[640px]"><thead><tr class="text-left border-b text-slate-500 text-xs"><th class="py-3 font-semibold w-24">Time</th><th class="font-semibold">Monday</th><th class="font-semibold">Tuesday</th><th class="font-semibold">Wednesday</th><th class="font-semibold">Thursday</th><th class="font-semibold">Friday</th></tr></thead><tbody id="timetableBody"><tr><td colspan="6" class="py-8 text-center text-sm text-muted">Loading timetable…</td></tr></tbody></table></div>
+     </div>
+
+     <!-- FEES -->
+     <div id="view-fees" class="view space-y-4">
+      <div class="grid grid-cols-1 xl:grid-cols-[1.3fr_0.9fr] gap-4">
+       <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim"><div class="font-semibold text-lg mb-1">Fees Portal</div><div class="text-xs text-muted mb-5">Term 2, 2025 · Payment records</div><div class="grid grid-cols-3 gap-3 mb-5"><div class="rounded-2xl bg-softGreen p-4"><div class="text-xs text-muted mb-1">Total Fees</div><div id="fee-total" class="text-2xl font-semibold text-success">—</div><div class="text-xs text-muted">KES</div></div><div class="rounded-2xl bg-softBlue p-4"><div class="text-xs text-muted mb-1">Amount Paid</div><div id="fee-paid" class="text-2xl font-semibold text-primary">—</div><div class="text-xs text-muted">KES</div></div><div class="rounded-2xl bg-softPink p-4"><div class="text-xs text-muted mb-1">Balance Due</div><div id="fee-balance" class="text-2xl font-semibold text-danger">—</div><div class="text-xs text-muted">KES</div></div></div><div class="mb-5"><div class="flex justify-between text-xs mb-2"><span class="text-muted">Payment progress</span><span id="fee-pct" class="font-semibold text-success">—</span></div><div class="progress-bar"><div id="fee-progress-bar" class="progress-fill bg-success" style="width:0%"></div></div></div><div class="font-semibold mb-3">Payment History</div><table class="w-full text-sm"><thead><tr class="text-left border-b text-slate-500 text-xs"><th class="py-2 font-semibold">Date</th><th class="font-semibold">Mode</th><th class="font-semibold">Reference</th><th class="font-semibold">Amount</th><th class="font-semibold">Receipt</th></tr></thead><tbody id="paymentTable"><tr><td colspan="5" class="py-6 text-center text-sm text-muted">Loading…</td></tr></tbody></table></div>
+       <div class="space-y-4"><div class="bg-white rounded-[1.6rem] shadow-card p-5 anim" style="animation-delay:.1s"><div class="font-semibold mb-4">Fee Breakdown</div><div class="space-y-3" id="feeBreakdown"></div></div><div class="bg-white rounded-[1.6rem] shadow-card p-4 anim" style="animation-delay:.15s"><div class="font-semibold mb-3">Quick Actions</div><div class="grid grid-cols-2 gap-2"><button onclick="downloadAllReceipts()" class="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#F7F8FC] hover:bg-softBlue transition text-xs font-semibold"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2] text-primary"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M12 3v12M8 11l4 4 4-4"/></svg>Download Receipts</button><button onclick="shareViaWhatsApp()" class="flex flex-col items-center gap-1 p-3 rounded-2xl bg-[#F7F8FC] hover:bg-softGreen transition text-xs font-semibold"><svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-current stroke-[2] text-success"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 7 7l.8-.8a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17v-.08Z"/></svg>Share via WhatsApp</button></div></div></div>
+      </div>
+     </div>
+
+     <!-- NOTICES -->
+     <div id="view-notices" class="view space-y-4">
+      <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim"><div class="flex items-center justify-between mb-5"><div><div class="font-semibold text-lg">School Notices</div><div class="text-xs text-muted mt-0.5">Broadcasts from the Director and your teachers</div></div><span id="notices-count-label" class="px-3 py-1.5 rounded-full bg-softPink text-danger text-xs font-semibold hidden">New</span></div><div id="allNotices"><div class="text-xs text-muted py-6 text-center">Loading notices…</div></div></div>
+     </div>
+
+     <!-- CALENDAR -->
+     <div id="view-calendar" class="view space-y-4">
+      <div class="bg-white rounded-[1.6rem] shadow-card p-5 anim"><div class="font-semibold text-lg mb-1">School Calendar</div><div class="text-xs text-muted mb-5">Term 2, 2025 · Key dates, exams and events</div><div class="space-y-3" id="calendarEvents"><div class="text-xs text-muted py-6 text-center">Loading events…</div></div></div>
+     </div>
+
+    </div>
+   </main>
+  </div>
+ </div>
+</div>
+
+<script type="module">
+import { auth, db } from "./firebase-config.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { doc, getDoc, collection, query, where, orderBy, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+let STUDENT={}, SUBJECTS=[], PAYMENTS=[], FEE_BREAKDOWN=[];
+let NOTICES=[], CALENDAR_EVENTS=[], REPORTS=[], ABSENCES=[];
+let TODAY_SCHEDULE=[], TIMETABLE=[];
+let ATT_STATS={present:0,absent:0,rate:0}, ATT_DAILY={};
+let calOffset=0, donutChart=null, progressChartInst=null;
+
+// ── HELPERS ──
+function fmtDate(ts){if(!ts)return"—";try{const d=ts.seconds?new Date(ts.seconds*1000):new Date(ts);return d.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});}catch{return"—";}}
+function fmtShort(ts){if(!ts)return"—";try{const d=ts.seconds?new Date(ts.seconds*1000):new Date(ts);return d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}catch{return"—";}}
+function ini(n){return(n||"?").split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();}
+const ICONS={english:"📖",math:"🔢",science:"🔬",social:"🗺",kiswahili:"🌍",physical:"⚽",creative:"🎨",cre:"✝️",music:"🎵"};
+function sIcon(n=""){const k=n.toLowerCase();for(const[a,b]of Object.entries(ICONS))if(k.includes(a))return b;return"📚";}
+const PC={EE:"perf-ee",ME:"perf-me",AE:"perf-ae",BE:"perf-be"};
+function pill(p){if(!p)return'<span class="text-slate-300 text-xs">—</span>';return`<span class="perf-pill ${PC[p]||""}">${p}</span>`;}
+function topLevel(a){if(!a||!a.length)return"—";if(a.includes("EE"))return"EE";if(a.includes("ME"))return"ME";if(a.includes("AE"))return"AE";return"BE";}
+function showLoad(m="Loading…"){document.getElementById("fb-loading").style.display="flex";document.getElementById("fb-load-msg").textContent=m;}
+function hideLoad(){document.getElementById("fb-loading").style.display="none";}
+
+// ── LOADERS ──
+async function loadProfile(uid){
+  const s=await getDoc(doc(db,"users",uid));
+  if(!s.exists())throw new Error("Profile not found.");
+  const d=s.data();
+  if(d.role&&d.role!=="student")throw new Error("Not a student account.");
+  STUDENT={uid,name:d.full_name||"Student",adm:d.adm_number||"—",nemis:d.nemis_id||"—",cls:d.class_stream||"—",house:d.house||"—",joined:d.year_joined?String(d.year_joined):"—",dob:fmtDate(d.dob),gender:d.gender||"—",address:d.address||"—",parentName:d.parent_name||"—",parentPhone:d.parent_phone||"—",parentEmail:d.parent_email||"—",transport:{route:d.transport_route||"—",vehicle:d.transport_vehicle||"—",pickup:d.transport_pickup||"—",time:d.transport_time||"—"}};
+}
+
+async function loadGrades(uid){
+  SUBJECTS=[];
+  try{
+    const s=await getDocs(query(collection(db,"grades"),where("student_id","==",uid)));
+    const by={};
+    s.forEach(d=>{
+      const g=d.data(),k=g.subject||"Unknown",t=Number(g.term)||0;
+      if(!by[k])by[k]={name:k,icon:sIcon(k),t1:null,t2:null,t3:null,teacher:g.teacher_name||"—",remark:"",average:null};
+      const e=by[k];
+      if(t===1)e.t1=g.cbc_level||null;
+      if(t===2){e.t2=g.cbc_level||null;e.remark=g.remarks||"";e.average=g.average_pct||null;e.teacher=g.teacher_name||"—";}
+      if(t===3)e.t3=g.cbc_level||null;
+    });
+    SUBJECTS=Object.values(by);
+  }catch(e){console.warn("Grades:",e);}
+}
+
+async function loadFinance(uid){
+  PAYMENTS=[];FEE_BREAKDOWN=[];
+  try{
+    const s=await getDoc(doc(db,"finance",uid));
+    if(!s.exists())return;
+    const d=s.data();
+    PAYMENTS=(d.payment_history||[]).map(p=>({date:fmtShort(p.date),mode:p.mode||"—",ref:p.ref||"—",amount:p.amount||0,receiptUrl:p.receipt_url||null}));
+    const total=d.termly_total||0,arrears=d.arrears||0,paid=d.total_paid||PAYMENTS.reduce((s,p)=>s+p.amount,0),bal=Math.max(0,total+arrears-paid);
+    FEE_BREAKDOWN=[{label:"Term Total",amount:total},{label:"Arrears",amount:arrears},{label:"Total Paid",amount:paid},{label:"Balance",amount:bal}];
+    document.getElementById("fee-total").textContent=total.toLocaleString();
+    document.getElementById("fee-paid").textContent=paid.toLocaleString();
+    document.getElementById("fee-balance").textContent=bal.toLocaleString();
+    document.getElementById("stat-fees").textContent=bal>0?(bal/1000).toFixed(0)+"K":"NIL";
+    const pct=total>0?Math.round((paid/total)*100):0;
+    document.getElementById("fee-pct").textContent=pct+"%";
+    document.getElementById("fee-progress-bar").style.width=pct+"%";
+  }catch(e){console.warn("Finance:",e);}
+}
+
+async function loadAttendance(uid,cls){
+  ABSENCES=[];ATT_DAILY={};ATT_STATS={present:0,absent:0,rate:0};
+  try{
+    const now=new Date(),yr=now.getFullYear(),mo=String(now.getMonth()+1).padStart(2,"0");
+    const q=query(collection(db,"attendance"),where("class_id","==",cls),where("year","==",yr));
+    const s=await getDocs(q);
+    let p=0,a=0;
+    s.forEach(d=>{
+      const data=d.data(),students=data.students||{},sD=students[uid];
+      if(!sD)return;
+      const parts=d.id.split("_"),dateStr=parts[parts.length-1],day=parseInt(dateStr.split("-")[2]),docMo=dateStr.split("-")[1];
+      if(sD.status==="present"){p++;if(docMo===mo)ATT_DAILY[day]="present";}
+      else{a++;if(docMo===mo)ATT_DAILY[day]="absent";ABSENCES.push({date:fmtShort({seconds:data.date?.seconds||0})||dateStr,reason:sD.reason||"Not recorded",teacher:sD.recorded_by||"—",excused:sD.excused||false});}
+    });
+    ATT_STATS={present:p,absent:a,rate:p+a>0?Math.round((p/(p+a))*100):0};
+    document.getElementById("stat-attendance").textContent=ATT_STATS.rate+"%";
+    document.getElementById("att-present").textContent=ATT_STATS.present;
+    document.getElementById("att-absent").textContent=ATT_STATS.absent;
+    document.getElementById("att-rate").textContent=ATT_STATS.rate+"%";
+  }catch(e){console.warn("Attendance:",e);}
+}
+
+async function loadNotices(){
+  NOTICES=[];
+  try{
+    const s=await getDocs(query(collection(db,"notices"),where("visible_to","array-contains","student"),orderBy("posted_at","desc"),limit(15)));
+    s.forEach(d=>{const n=d.data();NOTICES.push({type:n.category||"general",title:n.title||"Notice",body:n.content||"",by:n.posted_by_name||"Admin",date:fmtDate(n.posted_at)});});
+    if(NOTICES.length){
+      document.getElementById("notices-badge").textContent=NOTICES.length;
+      document.getElementById("notices-badge").classList.remove("hidden");
+      document.getElementById("notif-dot")?.classList.remove("hidden");
+      document.getElementById("notices-count-label").textContent=NOTICES.length+" New";
+      document.getElementById("notices-count-label").classList.remove("hidden");
+    }
+  }catch(e){console.warn("Notices:",e);}
+}
+
+async function loadDocuments(){
+  REPORTS=[];CALENDAR_EVENTS=[];
+  try{
+    const s=await getDocs(query(collection(db,"documents"),where("visible_to","array-contains","student"),orderBy("uploaded_at","desc"),limit(30)));
+    const bgs=["softGreen","softYellow","softPurple","softPink","softBlue"];
+    s.forEach(d=>{
+      const doc2=d.data();
+      if(doc2.category==="report"||doc2.file_type==="pdf")REPORTS.push({term:doc2.title||"Report",desc:doc2.description||fmtDate(doc2.uploaded_at),fileUrl:doc2.file_url||null});
+      else{const i=CALENDAR_EVENTS.length%5;CALENDAR_EVENTS.push({color:bgs[i],label:doc2.title||"Event",date:fmtDate(doc2.uploaded_at),fileUrl:doc2.file_url||null});}
+    });
+  }catch(e){console.warn("Documents:",e);}
+}
+
+async function loadTimetable(cls){
+  TIMETABLE=[];TODAY_SCHEDULE=[];
+  if(!cls)return;
+  try{
+    const clsId=cls.replace(/\s+/g,"");
+    const s=await getDoc(doc(db,"classes",clsId));
+    if(!s.exists())return;
+    const data=s.data();
+    if(Array.isArray(data.timetable)){
+      TIMETABLE=data.timetable;
+      const dayKeys=["sun","mon","tue","wed","thu","fri","sat"];
+      const todayKey=dayKeys[new Date().getDay()];
+      const colors=["bg-[#EDF2FF]","bg-[#EAF9F1]","bg-[#FFF7E9]","bg-[#F3EEFF]"];
+      TIMETABLE.forEach((slot,idx)=>{
+        const subj=slot[todayKey];
+        if(subj&&subj!=="BREAK"&&subj!=="Lunch")TODAY_SCHEDULE.push({time:slot.time?.split("–")[0]||"—",subject:subj,teacher:"—",color:colors[idx%4]});
+      });
+    }
+  }catch(e){console.warn("Timetable:",e);}
+}
+
+// ── RENDERS ──
+function patchDOM(){
+  const n=STUDENT.name||"Student",fn=n.split(" ")[0],av=ini(n);
+  document.getElementById("welcome-heading").textContent="Welcome back, "+fn+"!";
+  document.getElementById("currentDate").textContent="Term 2, 2025 · "+new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  ["top-avatar","dash-avatar","sb-avatar","profile-avatar"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=av;});
+  document.getElementById("sb-name").textContent=n;
+  document.getElementById("sb-meta").textContent=(STUDENT.cls||"—")+" · "+(STUDENT.adm||"—");
+  document.getElementById("dash-name").textContent=n;
+  document.getElementById("dash-adm").textContent=STUDENT.adm||"—";
+  document.getElementById("dash-class").textContent=STUDENT.cls||"—";
+  document.getElementById("dash-house").textContent=STUDENT.house||"—";
+  document.getElementById("stat-subjects").textContent=SUBJECTS.length||"—";
+  const t2l=SUBJECTS.map(s=>s.t2).filter(Boolean),ov=topLevel(t2l);
+  document.getElementById("stat-grade").textContent=ov;
+  document.getElementById("donut-grade").textContent=ov;
+  const pel=document.getElementById("profile-level-pill");
+  if(pel){pel.textContent=({EE:"Exceeding",ME:"Meeting",AE:"Approaching",BE:"Below"}[ov]||"—")+" Expectations";pel.className="perf-pill "+(PC[ov]||"perf-me")+" mt-3";}
+  const t1l=SUBJECTS.map(s=>s.t1).filter(Boolean),t2all=SUBJECTS.map(s=>s.t2).filter(Boolean);
+  const t1el=document.getElementById("t1-overall"),t2el=document.getElementById("t2-overall");
+  if(t1el){const v=topLevel(t1l);t1el.textContent=v;t1el.className="font-semibold perf-pill "+(PC[v]||"perf-me");}
+  if(t2el){const v=topLevel(t2all);t2el.textContent=v;t2el.className="font-semibold perf-pill "+(PC[v]||"perf-ee");}
+  renderMiniCalendar();
+}
+
+function renderMiniCalendar(){
+  const now=new Date(),d=new Date(now.getFullYear(),now.getMonth()+calOffset,1);
+  document.getElementById("cal-month-label").textContent=d.toLocaleString("default",{month:"long",year:"numeric"});
+  const fd=new Date(d.getFullYear(),d.getMonth(),1).getDay(),dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const today=new Date();
+  let h="";
+  for(let i=0;i<fd;i++)h+=`<div></div>`;
+  for(let day=1;day<=dim;day++){const it=day===today.getDate()&&d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear();h+=`<div class="${it?"w-8 h-8 mx-auto rounded-full bg-primary text-white grid place-items-center text-sm font-bold":""}">${day}</div>`;}
+  document.getElementById("mini-cal-body").innerHTML=h;
+}
+
+function renderDonut(){
+  const t2l=SUBJECTS.map(s=>s.t2).filter(Boolean),c={EE:0,ME:0,AE:0,BE:0};
+  t2l.forEach(l=>{if(c[l]!==undefined)c[l]++;});
+  const ctx=document.getElementById("donutCanvas");if(!ctx)return;
+  if(donutChart)donutChart.destroy();
+  donutChart=new Chart(ctx,{type:"doughnut",data:{labels:["EE","ME","AE","BE"],datasets:[{data:[c.EE,c.ME,c.AE,c.BE],backgroundColor:["#5B5EF7","#F39C52","#35B37E","#E86D6D"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:true,cutout:"72%",plugins:{legend:{display:false}}}});
+}
+
+function renderDashGradebook(){
+  const el=document.getElementById("dashGradebook");if(!el)return;
+  if(!SUBJECTS.length){el.innerHTML='<p class="text-xs text-muted py-4 text-center">No grade data found.</p>';return;}
+  el.innerHTML=SUBJECTS.map(s=>`<div class="flex items-center gap-3 p-2 rounded-2xl bg-[#FAFBFF]"><div class="w-8 h-8 rounded-xl bg-[#F1F4F9] grid place-items-center text-base flex-shrink-0">${s.icon}</div><div class="flex-1 text-sm font-medium">${s.name}</div>${pill(s.t2||s.t1)}</div>`).join("");
+}
+
+function renderRemarksTable(){
+  const el=document.getElementById("remarksTable");if(!el)return;
+  if(!SUBJECTS.length){el.innerHTML='<tr><td colspan="4" class="py-6 text-center text-xs text-muted">No grades recorded yet.</td></tr>';return;}
+  el.innerHTML=SUBJECTS.slice(0,4).map(s=>`<tr class="border-b last:border-0"><td class="py-3 flex items-center gap-2"><span class="w-7 h-7 rounded-xl bg-[#F1F4F9] grid place-items-center text-sm">${s.icon}</span><span class="text-sm">${s.name}</span></td><td class="text-xs text-muted">${s.teacher}</td><td>${pill(s.t2||s.t1)}</td><td class="text-xs text-muted max-w-[160px]">${(s.remark||"—").substring(0,50)}</td></tr>`).join("");
+}
+
+function renderTodaySchedule(){
+  const el=document.getElementById("todaySchedule");if(!el)return;
+  if(!TODAY_SCHEDULE.length){el.innerHTML='<div class="text-xs text-muted py-4 text-center">No classes scheduled today.</div>';return;}
+  const colors=["bg-[#EDF2FF]","bg-[#EAF9F1]","bg-[#FFF7E9]","bg-[#F3EEFF]"];
+  el.innerHTML=TODAY_SCHEDULE.map((s,i)=>`<div class="flex items-center gap-3 p-3 rounded-2xl bg-[#F7F8FC]"><div class="w-14 h-14 rounded-2xl ${colors[i%4]} grid place-items-center font-semibold text-sm flex-shrink-0">${s.time}</div><div class="flex-1"><div class="font-semibold text-sm">${s.subject}</div><div class="text-xs text-muted">${s.teacher}</div></div></div>`).join("");
+}
+
+function renderProfileInfo(){
+  const rows=[["ADM Number",STUDENT.adm],["NEMIS ID",STUDENT.nemis],["Class / Stream",STUDENT.cls],["Date of Birth",STUDENT.dob],["Gender",STUDENT.gender],["Address",STUDENT.address],["Year Joined",STUDENT.joined],["House",STUDENT.house]];
+  const rH=rows.map(([k,v])=>`<div class="info-row"><span class="text-xs text-muted font-medium">${k}</span><span class="text-sm font-semibold text-navy">${v||"—"}</span></div>`).join("");
+  const el=document.getElementById("profileInfo");if(el)el.innerHTML=rH;
+  const gEl=document.getElementById("guardianInfo");
+  if(gEl)gEl.innerHTML=[["Name",STUDENT.parentName],["Phone",STUDENT.parentPhone],["Email",STUDENT.parentEmail]].map(([k,v])=>`<div class="info-row"><span class="text-xs text-muted font-medium">${k}</span><span class="text-sm font-semibold text-navy">${v||"—"}</span></div>`).join("");
+  const tEl=document.getElementById("transportInfo");
+  if(tEl){const t=STUDENT.transport||{};tEl.innerHTML=[["Route",t.route],["Vehicle",t.vehicle],["Pickup",t.pickup],["Time",t.time]].map(([k,v])=>`<div class="info-row"><span class="text-xs text-muted font-medium">${k}</span><span class="text-sm font-semibold text-navy">${v||"—"}</span></div>`).join("");}
+}
+
+function renderFullGradebook(){
+  const el=document.getElementById("fullGradebook");if(!el)return;
+  if(!SUBJECTS.length){el.innerHTML='<tr><td colspan="6" class="py-8 text-center text-sm text-muted">No grade records found.</td></tr>';return;}
+  el.innerHTML=SUBJECTS.map(s=>`<tr class="border-b last:border-0 hover:bg-[#FAFBFF] transition"><td class="py-3"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-xl bg-[#F1F4F9] grid place-items-center text-sm flex-shrink-0">${s.icon}</span><div class="font-semibold text-sm">${s.name}</div></div></td><td class="text-center">${pill(s.t1)}</td><td class="text-center">${pill(s.t2)}</td><td class="text-center">${pill(s.t3)}</td><td class="text-xs text-muted">${s.teacher}</td><td class="text-xs text-muted max-w-[200px] pr-2">${s.remark||"—"}</td></tr>`).join("");
+}
+
+function renderProgressChart(){
+  const ctx=document.getElementById("progressChart");if(!ctx||!SUBJECTS.length)return;
+  const sm={EE:4,ME:3,AE:2,BE:1};
+  if(progressChartInst)progressChartInst.destroy();
+  progressChartInst=new Chart(ctx,{type:"bar",data:{labels:SUBJECTS.map(s=>s.name.split(" ")[0]),datasets:[{label:"Term 1",data:SUBJECTS.map(s=>sm[s.t1]||0),backgroundColor:"rgba(91,94,247,0.18)",borderRadius:4},{label:"Term 2",data:SUBJECTS.map(s=>sm[s.t2]||0),backgroundColor:"rgba(91,94,247,0.85)",borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{font:{family:"DM Sans",size:11},boxWidth:10}}},scales:{y:{min:0,max:4,ticks:{font:{family:"DM Sans",size:10},callback:(v)=>["","BE","AE","ME","EE"][v]||v},grid:{color:"rgba(0,0,0,0.04)"}},x:{ticks:{font:{family:"DM Sans",size:10}},grid:{display:false}}}}});
+}
+
+function buildHeatmap(){
+  const el=document.getElementById("heatmapFull");if(!el)return;
+  const now=new Date(),yr=now.getFullYear(),mo=now.getMonth();
+  const days=["S","M","T","W","T","F","S"];
+  let h=days.map(d=>`<div class="hm-cell hm-hdr">${d}</div>`).join("");
+  const fd=new Date(yr,mo,1).getDay(),dim=new Date(yr,mo+1,0).getDate();
+  for(let i=0;i<fd;i++)h+=`<div class="hm-cell hm-weekend"></div>`;
+  for(let i=1;i<=dim;i++){const dow=new Date(yr,mo,i).getDay(),we=dow===0||dow===6,ab=ATT_DAILY[i]==="absent";h+=`<div class="hm-cell ${we?"hm-weekend":ab?"hm-absent":"hm-present"}" title="${i}">${i}</div>`;}
+  el.innerHTML=h;
+}
+
+function renderAbsenceLog(){
+  const el=document.getElementById("absenceLog");if(!el)return;
+  if(!ABSENCES.length){el.innerHTML='<div class="text-xs text-muted py-6 text-center">No absences recorded.</div>';return;}
+  el.innerHTML=ABSENCES.map(a=>`<div class="rounded-2xl bg-[#FAFBFF] border border-slate-100 p-4"><div class="flex items-center justify-between mb-2"><div class="font-semibold text-sm">${a.date}</div><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${a.excused?"bg-softGreen text-success":"bg-softPink text-danger"}">${a.excused?"Excused":"Unexcused"}</span></div><div class="text-xs text-muted">${a.reason}</div><div class="text-xs text-muted mt-1">Recorded by: ${a.teacher}</div></div>`).join("");
+}
+
+function renderReports(){
+  const el=document.getElementById("reportsList");if(!el)return;
+  if(!REPORTS.length){el.innerHTML='<div class="text-xs text-muted py-6 text-center">No reports available yet.</div>';return;}
+  el.innerHTML=REPORTS.map(r=>`<div class="flex items-center justify-between bg-[#FAFBFF] border border-slate-100 rounded-2xl p-4"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-2xl bg-softBlue grid place-items-center text-primary"><svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8M8 13h5"/></svg></div><div><div class="font-semibold text-sm">${r.term}</div><div class="text-xs text-muted mt-0.5">${r.desc}</div></div></div>${r.fileUrl?`<a href="${r.fileUrl}" target="_blank" download class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-navy text-white text-xs font-semibold hover:opacity-90 transition"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-none stroke-current stroke-[2]"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M12 3v12M8 11l4 4 4-4"/></svg>Download PDF</a>`:`<button class="px-3 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed">PDF</button>`}</div>`).join("");
+}
+
+function renderTimetable(){
+  const el=document.getElementById("timetableBody");if(!el)return;
+  if(!TIMETABLE.length){el.innerHTML='<tr><td colspan="6" class="py-8 text-center text-sm text-muted">No timetable set up yet.</td></tr>';return;}
+  const days=["mon","tue","wed","thu","fri"];
+  const C={"English":"bg-softBlue text-primary","Mathematics":"bg-softGreen text-success","Science":"bg-[#FFF7E9] text-[#9C6012]","Social Studies":"bg-softPurple text-[#6D4CC4]","Kiswahili":"bg-[#FFF0F0] text-danger","Creative Arts":"bg-[#FFF7E9] text-warning","P.E.":"bg-softGreen text-success","BREAK":"bg-slate-100 text-slate-400"};
+  el.innerHTML=TIMETABLE.map(row=>`<tr class="border-b last:border-0"><td class="py-3 pr-4 text-xs font-semibold text-muted whitespace-nowrap">${row.time||"—"}</td>${days.map(d=>{const sub=row[d]||"–";const cls=C[sub]||"bg-[#F7F8FC] text-muted";return`<td class="pr-2 py-2"><span class="inline-block px-2.5 py-1.5 rounded-xl text-xs font-semibold ${cls} whitespace-nowrap">${sub}</span></td>`;}).join("")}</tr>`).join("");
+}
+
+function renderPayments(){
+  const el=document.getElementById("paymentTable");if(!el)return;
+  if(!PAYMENTS.length){el.innerHTML='<tr><td colspan="5" class="py-6 text-center text-sm text-muted">No payment records found.</td></tr>';return;}
+  el.innerHTML=PAYMENTS.map(p=>`<tr class="border-b last:border-0"><td class="py-3 text-sm">${p.date}</td><td class="text-xs text-muted">${p.mode}</td><td class="text-xs text-muted font-mono">${p.ref}</td><td class="text-sm font-semibold text-success">KES ${(p.amount||0).toLocaleString()}</td><td>${p.receiptUrl?`<a href="${p.receiptUrl}" target="_blank" download class="px-2.5 py-1 rounded-lg bg-navy text-white text-[10px] font-semibold hover:opacity-90">PDF</a>`:`<span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-400 text-[10px]">—</span>`}</td></tr>`).join("");
+  const fb=document.getElementById("feeBreakdown");if(!fb)return;
+  fb.innerHTML=FEE_BREAKDOWN.map(f=>`<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0"><span class="text-sm text-muted">${f.label}</span><span class="text-sm font-semibold">KES ${(f.amount||0).toLocaleString()}</span></div>`).join("");
+}
+
+function renderNotices(){
+  const el=document.getElementById("allNotices");if(!el)return;
+  if(!NOTICES.length){el.innerHTML='<div class="text-xs text-muted py-6 text-center">No notices posted yet.</div>';return;}
+  const S={urgent:{bar:"bg-danger",badge:"bg-softPink text-danger",label:"Urgent"},info:{bar:"bg-primary",badge:"bg-softBlue text-primary",label:"Info"},general:{bar:"bg-warning",badge:"bg-softYellow text-warning",label:"General"}};
+  el.innerHTML=NOTICES.map(n=>{const s=S[n.type]||S.general;return`<div class="flex gap-4 py-4 border-b border-slate-100 last:border-0"><div class="w-1 rounded-full ${s.bar} flex-shrink-0 self-stretch"></div><div class="flex-1"><div class="flex items-start gap-3 mb-2 flex-wrap"><div class="font-semibold text-sm flex-1">${n.title}</div><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${s.badge}">${s.label}</span></div><div class="text-xs text-muted leading-relaxed mb-2">${n.body}</div><div class="text-[10px] text-slate-400">Posted by: ${n.by} · ${n.date}</div></div></div>`;}).join("");
+}
+
+function renderCalendar(){
+  const el=document.getElementById("calendarEvents");if(!el)return;
+  if(!CALENDAR_EVENTS.length){el.innerHTML='<div class="text-xs text-muted py-6 text-center">No events posted yet.</div>';return;}
+  const B={softGreen:"bg-softGreen",softYellow:"bg-softYellow",softPurple:"bg-softPurple",softPink:"bg-softPink",softBlue:"bg-softBlue"};
+  el.innerHTML=CALENDAR_EVENTS.map(e=>`<div class="flex items-center gap-4 ${B[e.color]||"bg-[#F7F8FC]"} rounded-2xl p-4"><div class="w-10 h-10 rounded-2xl bg-white shadow-sm grid place-items-center flex-shrink-0">📅</div><div class="flex-1"><div class="font-semibold text-sm">${e.label}</div><div class="text-xs text-muted mt-0.5">${e.date}</div></div>${e.fileUrl?`<a href="${e.fileUrl}" target="_blank" download class="px-3 py-1.5 rounded-xl bg-navy text-white text-xs font-semibold hover:opacity-90 transition">Download</a>`:""}</div>`).join("");
+}
+
+// ── DOWNLOAD / SHARE ──
+window.downloadAllReceipts=async function(){
+  const urls=PAYMENTS.filter(p=>p.receiptUrl).map(p=>p.receiptUrl);
+  if(!urls.length){alert("No receipt files attached yet. Please contact the school office.");return;}
+  urls.forEach((url,i)=>setTimeout(()=>{const a=document.createElement("a");a.href=url;a.target="_blank";a.download="receipt_"+(i+1)+".pdf";document.body.appendChild(a);a.click();document.body.removeChild(a);},i*700));
+};
+window.shareViaWhatsApp=function(){
+  const bal=FEE_BREAKDOWN.find(f=>f.label==="Balance")?.amount||0,paid=FEE_BREAKDOWN.find(f=>f.label==="Total Paid")?.amount||0;
+  const text=encodeURIComponent(`Kairi St Mary's — Fee Statement\nStudent: ${STUDENT.name||"—"}\nAdmission: ${STUDENT.adm||"—"}\nClass: ${STUDENT.cls||"—"}\nTerm 2, 2025\nAmount Paid: KES ${paid.toLocaleString()}\nBalance: KES ${bal.toLocaleString()}\n\nFor queries contact the school office.`);
+  window.open("https://wa.me/?text="+text,"_blank");
+};
+
+// ── NAVIGATION ──
+function activate(viewId){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const t=document.getElementById("view-"+viewId);if(t)t.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("bg-softBlue","text-primary");b.classList.add("hover:bg-slate-50");});
+  const ab=[...document.querySelectorAll(".nav-btn")].find(b=>b.dataset.view===viewId);
+  if(ab){ab.classList.add("bg-softBlue","text-primary");ab.classList.remove("hover:bg-slate-50");}
+  localStorage.setItem("studentPortalView",viewId);
+  if(viewId==="academics")setTimeout(renderProgressChart,50);
+}
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>{activate(b.dataset.view);closeSidebar();}));
+document.querySelectorAll(".nav-link").forEach(b=>b.addEventListener("click",()=>activate(b.dataset.view||b.getAttribute("data-view"))));
+document.getElementById("cal-prev").addEventListener("click",()=>{calOffset--;renderMiniCalendar();});
+document.getElementById("cal-next").addEventListener("click",()=>{calOffset++;renderMiniCalendar();});
+window.toggleSidebar=()=>{document.getElementById("sidebar").classList.toggle("open");document.getElementById("sidebar-overlay").classList.toggle("show");};
+window.closeSidebar=()=>{document.getElementById("sidebar").classList.remove("open");document.getElementById("sidebar-overlay").classList.remove("show");};
+window.handleLogout=async()=>{try{await signOut(auth);localStorage.removeItem("studentPortalView");window.location.href="login.html";}catch(e){console.error(e);}};
+
+function renderAll(){patchDOM();renderDonut();renderDashGradebook();renderRemarksTable();renderTodaySchedule();renderProfileInfo();renderFullGradebook();buildHeatmap();renderAbsenceLog();renderReports();renderTimetable();renderPayments();renderNotices();renderCalendar();activate(localStorage.getItem("studentPortalView")||"dashboard");}
+
+// ── ENTRY POINT ──
+onAuthStateChanged(auth,async(user)=>{
+  if(!user){window.location.href="login.html";return;}
+  showLoad("Loading your portal…");
+  try{
+    await loadProfile(user.uid);
+    showLoad("Fetching grades & attendance…");
+    await Promise.all([loadGrades(user.uid),loadFinance(user.uid),loadAttendance(user.uid,STUDENT.cls),loadNotices(),loadDocuments(),loadTimetable(STUDENT.cls)]);
+  }catch(err){console.error(err);alert("Some data could not be loaded: "+err.message);}
+  finally{hideLoad();renderAll();}
+});
+</script>
+</body></html>
