@@ -34,6 +34,191 @@
           },
         },
       };
+
+      // Ensure a global, hoisted SCHOOL_SETTINGS is available before any functions use it
+      var SCHOOL_SETTINGS = window.SCHOOL_SETTINGS || {};
+      window.SCHOOL_SETTINGS = SCHOOL_SETTINGS;
+      // Ensure a global, hoisted DIRECTOR is available for early handlers
+      var DIRECTOR = window.DIRECTOR || {};
+      window.DIRECTOR = DIRECTOR;
+
+      window.openEditBreakdownModal = function () {
+        const rangeSelect = document.getElementById("edit-fee-breakdown-range");
+        const ranges = [
+          "Play Group - PP2",
+          "Grade 1-3",
+          "Grade 4-6",
+          "Grade 7-9",
+        ];
+        if (rangeSelect) {
+          rangeSelect.innerHTML =
+            '<option value="">Select class range</option>' +
+            ranges.map((r) => `<option value="${r}">${r}</option>`).join("");
+        }
+
+        ["tuition", "activity", "exam", "other"].forEach((k) => {
+          const el = document.getElementById(`edit-fee-breakdown-${k}`);
+          if (el) el.value = "";
+        });
+
+        openModal("modal-edit-breakdown");
+      };
+
+      window.prefillFeeStructureRange = function () {
+        const range = document.getElementById(
+          "edit-fee-breakdown-range",
+        )?.value;
+        const structure = (SCHOOL_SETTINGS.feeStructures || {})[range] || {};
+        document.getElementById("edit-fee-breakdown-tuition").value =
+          structure.tuition || "";
+        document.getElementById("edit-fee-breakdown-activity").value =
+          structure.activity || "";
+        document.getElementById("edit-fee-breakdown-exam").value =
+          structure.exam || "";
+        document.getElementById("edit-fee-breakdown-other").value =
+          structure.other || "";
+      };
+
+      window.getClassRangeForClass = function (cls) {
+        const norm = String(cls || "")
+          .trim()
+          .toLowerCase();
+        if (/(pp1|pp2|play group|playgroup)/.test(norm))
+          return "Play Group - PP2";
+        if (/(grade ?[123]|\b1\b|\b2\b|\b3\b)/.test(norm)) return "Grade 1-3";
+        if (/(grade ?[456]|\b4\b|\b5\b|\b6\b)/.test(norm)) return "Grade 4-6";
+        if (/(grade ?[789]|\b7\b|\b8\b|\b9\b)/.test(norm)) return "Grade 7-9";
+        return null;
+      };
+
+      window.applyFeeStructureToClassRange = async function (
+        feeRange,
+        feeStructure,
+      ) {
+        if (!feeRange || !feeStructure) return;
+        const structure = {
+          tuition: parseFloat(feeStructure.tuition) || 0,
+          activity: parseFloat(feeStructure.activity) || 0,
+          exam: parseFloat(feeStructure.exam) || 0,
+          other: parseFloat(feeStructure.other) || 0,
+        };
+        const feeBreakdown = [
+          { label: "Tuition Fee", amount: structure.tuition },
+          { label: "Activity / PTA", amount: structure.activity },
+          { label: "Exam / Activity", amount: structure.exam },
+          { label: "Other Charges", amount: structure.other },
+        ].filter((item) => item.amount > 0);
+        const termlyTotal = feeBreakdown.reduce(
+          (sum, item) => sum + item.amount,
+          0,
+        );
+        const students = (window.ALL_STUDENTS || []).filter(
+          (student) =>
+            window.getClassRangeForClass(
+              student.class_stream ||
+                student.classStream ||
+                student.class ||
+                student.cls,
+            ) === feeRange,
+        );
+        const financeIndex = new Map(
+          (window.ALL_FINANCE || []).map((f) => [
+            f.student_id || f.studentId,
+            f,
+          ]),
+        );
+        await Promise.all(
+          students.map(async (student) => {
+            const existing = financeIndex.get(student.id);
+            if (existing) {
+              const payload = {
+                fee_breakdown: feeBreakdown,
+                termly_total: termlyTotal,
+                updatedAt: serverTimestamp(),
+              };
+              await updateDoc(doc(db, "finance", existing.id), payload);
+              Object.assign(existing, payload);
+            } else {
+              const newFin = {
+                student_id: student.id,
+                studentName: student.fullName || student.full_name || "",
+                studentClass:
+                  student.class_stream ||
+                  student.classStream ||
+                  student.class ||
+                  student.cls ||
+                  "",
+                total_paid: 0,
+                termly_total: termlyTotal,
+                fee_breakdown: feeBreakdown,
+                payment_history: [],
+                updatedAt: serverTimestamp(),
+              };
+              const ref = await addDoc(collection(db, "finance"), newFin);
+              window.ALL_FINANCE.push({ id: ref.id, ...newFin });
+            }
+          }),
+        );
+      };
+
+      window.saveFeeBreakdown = async function () {
+        const feeRange =
+          document.getElementById("edit-fee-breakdown-range")?.value || "";
+        if (!feeRange) {
+          alert("Please select a class range before saving the fee structure.");
+          return;
+        }
+        const tuition =
+          parseFloat(
+            document.getElementById("edit-fee-breakdown-tuition").value,
+          ) || 0;
+        const activity =
+          parseFloat(
+            document.getElementById("edit-fee-breakdown-activity").value,
+          ) || 0;
+        const exam =
+          parseFloat(
+            document.getElementById("edit-fee-breakdown-exam").value,
+          ) || 0;
+        const other =
+          parseFloat(
+            document.getElementById("edit-fee-breakdown-other").value,
+          ) || 0;
+        const feeStructure = {
+          tuition,
+          activity,
+          exam,
+          other,
+        };
+        const rangeTotal = tuition + activity + exam + other;
+        const settingsUpdate = {
+          feeStructures: {
+            ...(SCHOOL_SETTINGS.feeStructures || {}),
+            [feeRange]: feeStructure,
+          },
+          termFee: Math.max(rangeTotal, SCHOOL_SETTINGS.termFee || 11400),
+          updatedAt: serverTimestamp(),
+          updatedBy: DIRECTOR.uid,
+        };
+        try {
+          await setDoc(doc(db, "settings", "school"), settingsUpdate, {
+            merge: true,
+          });
+          Object.assign(SCHOOL_SETTINGS, settingsUpdate);
+          await window.applyFeeStructureToClassRange(feeRange, feeStructure);
+          showToast("Fee structure saved ✓");
+          closeModal("modal-edit-breakdown");
+          if (document.getElementById("view-fees").classList.contains("active"))
+            renderFees();
+          await logAudit(
+            "Fee structure updated",
+            `${feeRange} — ${fmtCcy(rangeTotal)}`,
+            "info",
+          );
+        } catch (e) {
+          alert("Error saving fee structure: " + e.message);
+        }
+      };
     </script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
@@ -644,6 +829,99 @@
               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
             />
           </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Receipt file</label
+            >
+            <input
+              id="fee-receipt-file"
+              type="file"
+              accept="image/*,.pdf"
+              class="w-full text-sm text-slate-700"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Receipt message</label
+            >
+            <textarea
+              id="fee-receipt-note"
+              rows="3"
+              placeholder="Optional MPESA message or receipt details"
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50"
+            ></textarea>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-[1.4rem] p-4">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <div class="text-sm font-semibold text-navy">Fee Breakdown</div>
+                <div class="text-xs text-muted">
+                  Add the student fee components that should display in the
+                  portal.
+                </div>
+              </div>
+              <span
+                class="text-[10px] uppercase tracking-[0.24em] text-slate-500"
+                >Optional</span
+              >
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label
+                  class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                  >Tuition Fee</label
+                >
+                <input
+                  id="fee-breakdown-tuition"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 10000"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                  >Activity / PTA</label
+                >
+                <input
+                  id="fee-breakdown-activity"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 1000"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                  >Exam / Activity</label
+                >
+                <input
+                  id="fee-breakdown-exam"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 500"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                  >Other Charges</label
+                >
+                <input
+                  id="fee-breakdown-other"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 0"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+                />
+              </div>
+            </div>
+          </div>
           <div class="flex gap-3 pt-2">
             <button
               onclick="saveFeePayment()"
@@ -653,6 +931,107 @@
             </button>
             <button
               onclick="closeModal('modal-fee-record')"
+              class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Fee Breakdown Modal -->
+    <div id="modal-edit-breakdown" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h3 class="text-lg font-semibold text-navy">
+            Fee Structure by Class Range
+          </h3>
+          <p class="text-sm text-muted">
+            Choose a class range and set the fee components for that range.
+          </p>
+        </div>
+        <div class="mt-4">
+          <div class="mb-4">
+            <label
+              class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+              >Class Range</label
+            >
+            <select
+              id="edit-fee-breakdown-range"
+              onchange="prefillFeeStructureRange()"
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-white"
+            >
+              <option value="">Select class range</option>
+              <option>Play Group - PP2</option>
+              <option>Grade 1-3</option>
+              <option>Grade 4-6</option>
+              <option>Grade 7-9</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label
+                class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Tuition Fee</label
+              >
+              <input
+                id="edit-fee-breakdown-tuition"
+                type="number"
+                min="0"
+                placeholder="e.g. 10000"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Activity / PTA</label
+              >
+              <input
+                id="edit-fee-breakdown-activity"
+                type="number"
+                min="0"
+                placeholder="e.g. 1000"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Exam / Activity</label
+              >
+              <input
+                id="edit-fee-breakdown-exam"
+                type="number"
+                min="0"
+                placeholder="e.g. 500"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5"
+                >Other Charges</label
+              >
+              <input
+                id="edit-fee-breakdown-other"
+                type="number"
+                min="0"
+                placeholder="e.g. 0"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+              />
+            </div>
+          </div>
+          <div class="flex gap-3 pt-4">
+            <button
+              onclick="saveFeeBreakdown()"
+              class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+            >
+              💾 Save Fee Structure
+            </button>
+            <button
+              onclick="closeModal('modal-edit-breakdown')"
               class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
             >
               Cancel
@@ -802,6 +1181,113 @@
           </button>
         </div>
         <div id="approval-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Application Details Modal -->
+    <div id="modal-application-details" class="modal-overlay">
+      <div class="modal-box" style="max-width: 640px">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3
+              class="text-xl font-semibold text-navy"
+              style="font-family: &quot;Playfair Display&quot;, serif"
+            >
+              Application Details
+            </h3>
+            <p class="text-sm text-slate-500">
+              Full application information for review.
+            </p>
+          </div>
+          <button
+            onclick="closeModal('modal-application-details')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          id="application-details-body"
+          class="space-y-4 text-sm text-slate-700"
+        ></div>
+        <div class="flex justify-end pt-4 border-t border-slate-200">
+          <button
+            onclick="closeModal('modal-application-details')"
+            class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="modal-rejection" class="modal-overlay">
+      <div class="modal-box" style="max-width: 520px">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3
+              class="text-xl font-semibold text-navy"
+              style="font-family: &quot;Playfair Display&quot;, serif"
+            >
+              Reject Application
+            </h3>
+            <p class="text-sm text-slate-500">
+              Provide a reason for rejection (optional).
+            </p>
+          </div>
+          <button
+            onclick="closeModal('modal-rejection')"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 grid place-items-center transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="w-4 h-4 fill-none stroke-current stroke-[2.5]"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-navy mb-2">
+              Rejection Reason
+            </label>
+            <textarea
+              id="rejection-reason"
+              placeholder="Explain why this application is being rejected..."
+              rows="4"
+              class="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition resize-none"
+            ></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <button
+            onclick="closeModal('modal-rejection')"
+            class="px-6 py-2.5 bg-slate-100 text-navy rounded-xl text-sm font-semibold hover:bg-slate-200 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="submitRejection()"
+            class="px-6 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold hover:bg-danger/90 transition"
+          >
+            Confirm Rejection
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1041,6 +1527,27 @@
                   <path stroke-linecap="round" d="M9 12h6M12 9v6" /></svg
                 >Classes
               </button>
+              <button
+                onclick="activate('admissions')"
+                data-view="admissions"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12h6M12 9v6M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"
+                  /></svg
+                >Admissions Management
+                <span
+                  id="admission-badge"
+                  class="hidden absolute right-3 top-2.5 w-5 h-5 bg-warning text-white text-[10px] font-bold rounded-full grid place-items-center"
+                  >0</span
+                >
+              </button>
 
               <div
                 class="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-muted uppercase"
@@ -1144,6 +1651,22 @@
                     d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
                   /></svg
                 >Broadcast
+              </button>
+              <button
+                onclick="activate('news')"
+                data-view="news"
+                class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 7.5h4.5M12 12h4.5M12 16.5h4.5M3 4.5h18c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2v-12c0-1.1.9-2 2-2z"
+                  /></svg
+                >Live News
               </button>
 
               <div
@@ -1639,6 +2162,35 @@
                         >
                       </button>
                       <button
+                        onclick="openEditBreakdownModal()"
+                        title="Edit fee breakdown for selected student"
+                        class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softBlue hover:bg-blue-100 transition group"
+                      >
+                        <div
+                          class="w-10 h-10 rounded-xl bg-[#3B82F6] text-white grid place-items-center shadow group-hover:scale-110 transition"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            class="w-5 h-5 fill-none stroke-current stroke-[2]"
+                          >
+                            <path
+                              d="M12 20h9"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </div>
+                        <span
+                          class="text-xs font-semibold text-navy text-center"
+                          >Edit Breakdown</span
+                        >
+                      </button>
+                      <button
                         onclick="openModal('modal-broadcast')"
                         class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-softPurple hover:bg-purple-100 transition group"
                       >
@@ -1874,16 +2426,168 @@
                         </div>
                       </div>
                       <div>
-                        <label
-                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
-                          >Term Fee per Student (KES)</label
-                        >
-                        <input
-                          id="setting-term-fee"
-                          type="number"
-                          value="11400"
-                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
-                        />
+                        <div class="flex items-center justify-between mb-3">
+                          <div>
+                            <label
+                              class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                              >Fee Structure by Class Range</label
+                            >
+                            <p class="text-[10px] text-muted">
+                              Set components for each class range in the order
+                              below.
+                            </p>
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3">
+                          <div
+                            class="rounded-2xl border border-slate-200 p-4 bg-slate-50"
+                          >
+                            <div class="text-sm font-semibold text-navy mb-2">
+                              Play Group - PP2
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                              <input
+                                id="setting-playgroup-tuition"
+                                type="number"
+                                min="0"
+                                placeholder="Tuition"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-playgroup-activity"
+                                type="number"
+                                min="0"
+                                placeholder="Activity / PTA"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-playgroup-exam"
+                                type="number"
+                                min="0"
+                                placeholder="Exam / Activity"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-playgroup-other"
+                                type="number"
+                                min="0"
+                                placeholder="Other charges"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            class="rounded-2xl border border-slate-200 p-4 bg-slate-50"
+                          >
+                            <div class="text-sm font-semibold text-navy mb-2">
+                              Grade 1-3
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                              <input
+                                id="setting-grade1-3-tuition"
+                                type="number"
+                                min="0"
+                                placeholder="Tuition"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade1-3-activity"
+                                type="number"
+                                min="0"
+                                placeholder="Activity / PTA"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade1-3-exam"
+                                type="number"
+                                min="0"
+                                placeholder="Exam / Activity"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade1-3-other"
+                                type="number"
+                                min="0"
+                                placeholder="Other charges"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            class="rounded-2xl border border-slate-200 p-4 bg-slate-50"
+                          >
+                            <div class="text-sm font-semibold text-navy mb-2">
+                              Grade 4-6
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                              <input
+                                id="setting-grade4-6-tuition"
+                                type="number"
+                                min="0"
+                                placeholder="Tuition"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade4-6-activity"
+                                type="number"
+                                min="0"
+                                placeholder="Activity / PTA"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade4-6-exam"
+                                type="number"
+                                min="0"
+                                placeholder="Exam / Activity"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade4-6-other"
+                                type="number"
+                                min="0"
+                                placeholder="Other charges"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            class="rounded-2xl border border-slate-200 p-4 bg-slate-50"
+                          >
+                            <div class="text-sm font-semibold text-navy mb-2">
+                              Grade 7-9
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                              <input
+                                id="setting-grade7-9-tuition"
+                                type="number"
+                                min="0"
+                                placeholder="Tuition"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade7-9-activity"
+                                type="number"
+                                min="0"
+                                placeholder="Activity / PTA"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade7-9-exam"
+                                type="number"
+                                min="0"
+                                placeholder="Exam / Activity"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                              <input
+                                id="setting-grade7-9-other"
+                                type="number"
+                                min="0"
+                                placeholder="Other charges"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div>
                         <label
@@ -2146,6 +2850,158 @@
                 </div>
               </div>
 
+              <!-- ══ ADMISSIONS MANAGEMENT ══ -->
+              <div id="view-admissions" class="view space-y-4">
+                <!-- Stats Section -->
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+                >
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <div class="text-xs text-muted mb-2">
+                      Total Applications
+                    </div>
+                    <div class="text-2xl font-bold text-navy" id="adm-total">
+                      —
+                    </div>
+                  </div>
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <div class="text-xs text-muted mb-2">Pending Review</div>
+                    <div
+                      class="text-2xl font-bold text-warning"
+                      id="adm-pending"
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <div class="text-xs text-muted mb-2">Approved</div>
+                    <div
+                      class="text-2xl font-bold text-success"
+                      id="adm-approved"
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <div class="text-xs text-muted mb-2">Rejected</div>
+                    <div
+                      class="text-2xl font-bold text-danger"
+                      id="adm-rejected"
+                    >
+                      —
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Available Spaces Section -->
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div class="flex items-center justify-between mb-5">
+                    <div>
+                      <h3
+                        class="font-semibold text-navy"
+                        style="font-family: &quot;Playfair Display&quot;, serif"
+                      >
+                        📍 Available Spaces (Editable)
+                      </h3>
+                      <p class="text-xs text-muted mt-1">
+                        Edit the number of available spaces for each class.
+                        Changes are saved to Firestore automatically.
+                      </p>
+                    </div>
+                    <button
+                      onclick="saveAvailableSpaces()"
+                      class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                    >
+                      💾 Save All
+                    </button>
+                  </div>
+                  <div
+                    id="available-spaces-editor"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                  >
+                    <div class="text-center py-8 text-muted text-xs col-span-3">
+                      Loading…
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tabs for Applications & Requirements -->
+                <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                  <div class="flex gap-2 mb-5 border-b">
+                    <button
+                      onclick="switchAdmissionsTab('applications')"
+                      id="tab-applications"
+                      class="px-4 py-3 text-sm font-semibold border-b-2 border-primary text-primary"
+                    >
+                      📋 Applications
+                    </button>
+                    <button
+                      onclick="switchAdmissionsTab('requirements')"
+                      id="tab-requirements"
+                      class="px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-muted hover:text-navy"
+                    >
+                      ✓ Requirements
+                    </button>
+                  </div>
+
+                  <!-- Applications Tab -->
+                  <div id="tab-content-applications" class="space-y-3">
+                    <div class="flex gap-3 mb-4">
+                      <input
+                        id="app-search"
+                        type="text"
+                        placeholder="Search by child's name or email…"
+                        oninput="filterApplications()"
+                        class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      />
+                      <select
+                        id="app-status-filter"
+                        onchange="filterApplications()"
+                        class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      >
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </div>
+                    <div
+                      id="applications-list"
+                      class="space-y-2 max-h-96 overflow-y-auto"
+                    >
+                      <div class="text-center py-6 text-muted text-xs">
+                        Loading applications…
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Requirements Tab -->
+                  <div id="tab-content-requirements" class="hidden space-y-3">
+                    <p class="text-sm text-muted mb-4">
+                      Edit the admission requirements that will be displayed to
+                      parents on the public admissions page.
+                    </p>
+                    <div id="requirements-list" class="space-y-2">
+                      <div class="text-center py-4 text-muted text-xs">
+                        Loading requirements…
+                      </div>
+                    </div>
+                    <button
+                      onclick="addRequirement()"
+                      class="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-muted hover:border-primary hover:text-primary transition text-sm font-semibold"
+                    >
+                      + Add Requirement
+                    </button>
+                    <button
+                      onclick="saveRequirements()"
+                      class="w-full px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                    >
+                      💾 Save Requirements
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <!-- ══ ATTENDANCE ══ -->
               <div id="view-attendance" class="view space-y-4">
                 <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
@@ -2337,6 +3193,12 @@
                         class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
                       >
                         + Record
+                      </button>
+                      <button
+                        onclick="openEditBreakdownModal()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow"
+                      >
+                        + Edit Breakdown
                       </button>
                     </div>
                   </div>
@@ -2593,6 +3455,118 @@
                 </div>
               </div>
 
+              <!-- ══ LIVE NEWS ══ -->
+              <div id="view-news" class="view space-y-4">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <!-- Add News Form -->
+                  <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
+                    <h3
+                      class="font-semibold text-navy mb-5"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Add News Article
+                    </h3>
+                    <div class="space-y-3">
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Article Title *</label
+                        >
+                        <input
+                          id="news-title"
+                          type="text"
+                          placeholder="e.g. Term 2 Admission Begins"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Category *</label
+                        >
+                        <select
+                          id="news-category"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        >
+                          <option value="">— Select Category —</option>
+                          <option value="Academic">Academic</option>
+                          <option value="Achievement">Achievement</option>
+                          <option value="Sports">Sports</option>
+                          <option value="Event">Event</option>
+                          <option value="General">General</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Description *</label
+                        >
+                        <textarea
+                          id="news-description"
+                          rows="4"
+                          placeholder="Write the news details…"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 resize-none"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Image URL *</label
+                        >
+                        <input
+                          id="news-image"
+                          type="url"
+                          placeholder="https://images.unsplash.com/..."
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5"
+                          >Date *</label
+                        >
+                        <input
+                          id="news-date"
+                          type="date"
+                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                        />
+                      </div>
+                      <div
+                        id="news-error"
+                        class="hidden bg-softPink border border-danger/30 rounded-xl p-3 text-xs text-danger"
+                      ></div>
+                      <button
+                        onclick="saveNewsArticle()"
+                        class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primaryLight transition shadow"
+                      >
+                        📰 Publish News
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- News Preview -->
+                  <div
+                    class="bg-white rounded-[1.4rem] shadow-card p-5 anim"
+                    style="animation-delay: 0.1s"
+                  >
+                    <h3
+                      class="font-semibold text-navy mb-4"
+                      style="font-family: &quot;Playfair Display&quot;, serif"
+                    >
+                      Live News Articles
+                    </h3>
+                    <div
+                      id="news-list"
+                      class="space-y-3 max-h-96 overflow-y-auto"
+                    >
+                      <div class="text-xs text-muted text-center py-8">
+                        Loading news articles…
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- ══ AUDIT LOG ══ -->
               <div id="view-audit" class="view space-y-4">
                 <div class="bg-white rounded-[1.4rem] shadow-card p-5 anim">
@@ -2775,16 +3749,48 @@
         serverTimestamp,
         onSnapshot,
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+      import {
+        getStorage,
+        ref as storageRef,
+        uploadBytes,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
       // ──────────────────────────────────────────────
+      // Expose imported Firebase helpers to the global window object
+      // so functions defined in earlier non-module scripts can use them.
+      window.getAuth = getAuth;
+      window.onAuthStateChanged = onAuthStateChanged;
+      window.signOut = signOut;
+      window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+
+      window.getStorage = getStorage;
+      window.storageRef = storageRef;
+      window.uploadBytes = uploadBytes;
+      window.getDownloadURL = getDownloadURL;
+      window.getFirestore = getFirestore;
+      window.collection = collection;
+      window.doc = doc;
+      window.getDoc = getDoc;
+      window.getDocs = getDocs;
+      window.addDoc = addDoc;
+      window.setDoc = setDoc;
+      window.updateDoc = updateDoc;
+      window.deleteDoc = deleteDoc;
+      window.query = query;
+      window.where = where;
+      window.orderBy = orderBy;
+      window.serverTimestamp = serverTimestamp;
+      window.onSnapshot = onSnapshot;
       // ⚙️  FIREBASE CONFIG — replace with yours or import from firebase-config.js
       // ──────────────────────────────────────────────
-      let app, auth, db;
+      let app, auth, db, storage;
       try {
         const cfg = await import("../firebase-config.js").catch(() => null);
-        if (cfg && cfg.auth && cfg.db) {
+        if (cfg && cfg.auth && cfg.db && cfg.storage) {
           auth = cfg.auth;
           db = cfg.db;
+          storage = cfg.storage;
         } else {
           const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -2797,21 +3803,35 @@
           app = initializeApp(firebaseConfig);
           auth = getAuth(app);
           db = getFirestore(app);
+          storage = getStorage(app);
         }
       } catch (e) {
         console.error("Firebase init error:", e);
       }
 
+      window.app = app;
+      window.auth = auth;
+      window.db = db;
+      window.storage = storage;
+
       // ── STATE ─────────────────────────────────────
-      let DIRECTOR = {};
+      DIRECTOR = DIRECTOR || {};
+      window.DIRECTOR = DIRECTOR;
       let ALL_STUDENTS = [];
       let ALL_TEACHERS = [];
       let ALL_FINANCE = [];
       let ALL_APPROVALS = [];
       let ALL_BROADCASTS = [];
       let ALL_EVENTS = [];
+      window.ALL_STUDENTS = ALL_STUDENTS;
+      window.ALL_FINANCE = ALL_FINANCE;
+      window.ALL_TEACHERS = ALL_TEACHERS;
+      window.ALL_APPROVALS = ALL_APPROVALS;
+      window.ALL_BROADCASTS = ALL_BROADCASTS;
+      window.ALL_EVENTS = ALL_EVENTS;
       let ALL_AUDIT = [];
-      let SCHOOL_SETTINGS = {};
+      SCHOOL_SETTINGS = SCHOOL_SETTINGS || {};
+      window.SCHOOL_SETTINGS = SCHOOL_SETTINGS;
       let chartInsts = {};
 
       const CLASSES = [
@@ -2842,6 +3862,15 @@
         t.classList.add("show");
         setTimeout(() => t.classList.remove("show"), 3000);
       }
+
+      // Backward-compatible alias (some parts call showSaveToast)
+      function showSaveToast(msg = "Saved") {
+        showToast(msg);
+      }
+      window.showToast = showToast;
+      window.showSaveToast = showSaveToast;
+      window.initials = initials;
+
       function initials(name) {
         return (name || "?")
           .split(" ")
@@ -2869,6 +3898,7 @@
       function fmtCcy(n) {
         return "KES " + Number(n || 0).toLocaleString();
       }
+      window.fmtCcy = fmtCcy;
       function feeStatus(paid, total) {
         if (!total) return "unpaid";
         const p = paid / total;
@@ -3038,6 +4068,7 @@
           );
           const snap = await getDocs(q);
           ALL_STUDENTS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          window.ALL_STUDENTS = ALL_STUDENTS;
           updateStudentStats();
           populateStudentDatalist();
         } catch (e) {
@@ -3093,6 +4124,7 @@
         try {
           const snap = await getDocs(collection(db, "finance"));
           ALL_FINANCE = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          window.ALL_FINANCE = ALL_FINANCE;
           updateFeeStats();
         } catch (e) {
           console.error("Finance error:", e);
@@ -3198,12 +4230,33 @@
             if (SCHOOL_SETTINGS.schoolName)
               document.getElementById("setting-school-name").value =
                 SCHOOL_SETTINGS.schoolName;
-            if (SCHOOL_SETTINGS.termFee)
-              document.getElementById("setting-term-fee").value =
-                SCHOOL_SETTINGS.termFee;
+            if (SCHOOL_SETTINGS.term)
+              document.getElementById("setting-term").value =
+                SCHOOL_SETTINGS.term;
+            if (SCHOOL_SETTINGS.curriculum)
+              document.getElementById("setting-curriculum").value =
+                SCHOOL_SETTINGS.curriculum;
             if (SCHOOL_SETTINGS.subCounty)
               document.getElementById("setting-subcounty").value =
                 SCHOOL_SETTINGS.subCounty;
+            const ranges = {
+              "Play Group - PP2": "playgroup",
+              "Grade 1-3": "grade1-3",
+              "Grade 4-6": "grade4-6",
+              "Grade 7-9": "grade7-9",
+            };
+            const defs = SCHOOL_SETTINGS.feeStructures || {};
+            Object.entries(ranges).forEach(([label, key]) => {
+              const structure = defs[label] || {};
+              document.getElementById(`setting-${key}-tuition`).value =
+                structure.tuition || "";
+              document.getElementById(`setting-${key}-activity`).value =
+                structure.activity || "";
+              document.getElementById(`setting-${key}-exam`).value =
+                structure.exam || "";
+              document.getElementById(`setting-${key}-other`).value =
+                structure.other || "";
+            });
           }
         } catch (e) {}
       }
@@ -3800,6 +4853,7 @@
         updateFeeStats();
         filterFeeTable();
       }
+      window.renderFees = renderFees;
 
       window.filterFeeTable = function () {
         const tbody = document.getElementById("fee-table-body");
@@ -4091,14 +5145,76 @@
       };
 
       window.saveSchoolSettings = async function () {
+        const feeStructures = {
+          "Play Group - PP2": {
+            tuition: parseInt(
+              document.getElementById("setting-playgroup-tuition").value || 0,
+            ),
+            activity: parseInt(
+              document.getElementById("setting-playgroup-activity").value || 0,
+            ),
+            exam: parseInt(
+              document.getElementById("setting-playgroup-exam").value || 0,
+            ),
+            other: parseInt(
+              document.getElementById("setting-playgroup-other").value || 0,
+            ),
+          },
+          "Grade 1-3": {
+            tuition: parseInt(
+              document.getElementById("setting-grade1-3-tuition").value || 0,
+            ),
+            activity: parseInt(
+              document.getElementById("setting-grade1-3-activity").value || 0,
+            ),
+            exam: parseInt(
+              document.getElementById("setting-grade1-3-exam").value || 0,
+            ),
+            other: parseInt(
+              document.getElementById("setting-grade1-3-other").value || 0,
+            ),
+          },
+          "Grade 4-6": {
+            tuition: parseInt(
+              document.getElementById("setting-grade4-6-tuition").value || 0,
+            ),
+            activity: parseInt(
+              document.getElementById("setting-grade4-6-activity").value || 0,
+            ),
+            exam: parseInt(
+              document.getElementById("setting-grade4-6-exam").value || 0,
+            ),
+            other: parseInt(
+              document.getElementById("setting-grade4-6-other").value || 0,
+            ),
+          },
+          "Grade 7-9": {
+            tuition: parseInt(
+              document.getElementById("setting-grade7-9-tuition").value || 0,
+            ),
+            activity: parseInt(
+              document.getElementById("setting-grade7-9-activity").value || 0,
+            ),
+            exam: parseInt(
+              document.getElementById("setting-grade7-9-exam").value || 0,
+            ),
+            other: parseInt(
+              document.getElementById("setting-grade7-9-other").value || 0,
+            ),
+          },
+        };
         const settings = {
           schoolName: document
             .getElementById("setting-school-name")
             .value.trim(),
           term: document.getElementById("setting-term").value,
           curriculum: document.getElementById("setting-curriculum").value,
-          termFee: parseInt(
-            document.getElementById("setting-term-fee").value || 11400,
+          feeStructures,
+          termFee: Math.max(
+            11400,
+            ...Object.values(feeStructures).map(
+              (item) => item.tuition + item.activity + item.exam + item.other,
+            ),
           ),
           subCounty: document.getElementById("setting-subcounty").value.trim(),
           updatedAt: serverTimestamp(),
@@ -4109,6 +5225,19 @@
             merge: true,
           });
           Object.assign(SCHOOL_SETTINGS, settings);
+          const ranges = Object.keys(feeStructures);
+          for (const range of ranges) {
+            const structure = feeStructures[range];
+            if (
+              structure &&
+              (structure.tuition ||
+                structure.activity ||
+                structure.exam ||
+                structure.other)
+            ) {
+              await window.applyFeeStructureToClassRange(range, structure);
+            }
+          }
           showToast("School settings saved ✓");
           await logAudit(
             "School settings updated",
@@ -4318,12 +5447,44 @@
         }
       };
 
+      async function uploadReceiptFile(file, path) {
+        if (!file || !storage) return null;
+        const storageReference = storageRef(storage, path);
+        const snap = await uploadBytes(storageReference, file);
+        return await getDownloadURL(snap.ref);
+      }
+
       window.saveFeePayment = async function () {
         const student = document.getElementById("fee-student").value.trim();
         const amount = parseFloat(document.getElementById("fee-amount").value);
         const date = document.getElementById("fee-date").value;
         const method = document.getElementById("fee-method").value;
         const ref = document.getElementById("fee-ref").value.trim();
+        const receiptFile =
+          document.getElementById("fee-receipt-file").files?.[0] || null;
+        const receiptNote = document
+          .getElementById("fee-receipt-note")
+          .value.trim();
+        const breakdownTuition =
+          parseFloat(document.getElementById("fee-breakdown-tuition").value) ||
+          0;
+        const breakdownActivity =
+          parseFloat(document.getElementById("fee-breakdown-activity").value) ||
+          0;
+        const breakdownExam =
+          parseFloat(document.getElementById("fee-breakdown-exam").value) || 0;
+        const breakdownOther =
+          parseFloat(document.getElementById("fee-breakdown-other").value) || 0;
+        const feeBreakdown = [
+          { label: "Tuition Fee", amount: breakdownTuition },
+          { label: "Activity / PTA", amount: breakdownActivity },
+          { label: "Exam / Activity", amount: breakdownExam },
+          { label: "Other Charges", amount: breakdownOther },
+        ].filter((item) => item.amount > 0);
+        const breakdownTotal = feeBreakdown.reduce(
+          (sum, item) => sum + item.amount,
+          0,
+        );
         if (!student || !amount || !date) {
           alert("Student, amount and date are required.");
           return;
@@ -4331,6 +5492,13 @@
         const studentObj = ALL_STUDENTS.find(
           (s) => (s.fullName || s.full_name || "") === student,
         );
+        let receiptUrl = null;
+        if (receiptFile && studentObj) {
+          receiptUrl = await uploadReceiptFile(
+            receiptFile,
+            `fee_receipts/${studentObj.id}/${Date.now()}_${receiptFile.name}`,
+          );
+        }
         try {
           const payData = {
             student_name: student,
@@ -4339,6 +5507,9 @@
             date,
             method,
             reference: ref,
+            receiptUrl,
+            receiptNote,
+            feeBreakdown,
             recorded_by: DIRECTOR.uid,
             createdAt: serverTimestamp(),
           };
@@ -4360,8 +5531,17 @@
                     mode: method,
                     amount: amount,
                     ref: ref,
+                    receiptUrl: receiptUrl || null,
+                    receiptNote: receiptNote || null,
                   }, // Store as Date object
                 ],
+                fee_breakdown: feeBreakdown.length
+                  ? feeBreakdown
+                  : existing.fee_breakdown || [],
+                termly_total:
+                  breakdownTotal ||
+                  existing.termly_total ||
+                  parseInt(SCHOOL_SETTINGS.termFee || 11400),
                 updatedAt: serverTimestamp(),
               });
               // Update in-memory data
@@ -4373,21 +5553,29 @@
                   mode: method,
                   amount: amount,
                   ref: ref,
+                  receiptUrl: receiptUrl || null,
+                  receiptNote: receiptNote || null,
                 },
               ];
+              if (feeBreakdown.length) existing.fee_breakdown = feeBreakdown;
+              if (breakdownTotal) existing.termly_total = breakdownTotal;
             } else {
               const newFin = {
                 student_id: studentObj.id,
                 studentName: studentObj.fullName || studentObj.full_name,
                 studentClass: studentObj.class_stream || studentObj.classStream,
                 total_paid: amount, // Initial paid amount
-                termly_total: parseInt(SCHOOL_SETTINGS.termFee || 11400), // Initial total fee
+                termly_total:
+                  breakdownTotal || parseInt(SCHOOL_SETTINGS.termFee || 11400), // Initial total fee
+                fee_breakdown: feeBreakdown,
                 payment_history: [
                   {
                     date: new Date(date),
                     mode: method,
                     amount: amount,
                     ref: ref,
+                    receiptUrl: receiptUrl || null,
+                    receiptNote: receiptNote || null,
                   },
                 ], // Initial payment
                 updatedAt: serverTimestamp(),
@@ -4453,7 +5641,6 @@
               "Director",
             postedByRole: "Director",
             targetRole: targetRole,
-            targetClass: targetClass,
             createdAt: serverTimestamp(),
           });
           showToast(`Broadcast sent to ${audience} ✓`);
@@ -4533,18 +5720,636 @@
         }
       };
 
+      window.saveNewsArticle = async function () {
+        const title = document.getElementById("news-title").value.trim();
+        const category = document.getElementById("news-category").value;
+        const description = document
+          .getElementById("news-description")
+          .value.trim();
+        const imageUrl = document.getElementById("news-image").value.trim();
+        const date = document.getElementById("news-date").value;
+        const errorDiv = document.getElementById("news-error");
+
+        // Validation
+        if (!title || !category || !description || !imageUrl || !date) {
+          errorDiv.textContent = "All fields are required.";
+          errorDiv.classList.remove("hidden");
+          return;
+        }
+
+        errorDiv.classList.add("hidden");
+
+        try {
+          const newsData = {
+            title,
+            category,
+            description,
+            imageUrl,
+            date,
+            createdBy: DIRECTOR.uid,
+            createdAt: serverTimestamp(),
+          };
+
+          const ref = await addDoc(collection(db, "school_news"), newsData);
+          ALL_NEWS.unshift({ id: ref.id, ...newsData });
+
+          // Clear form
+          [
+            "news-title",
+            "news-category",
+            "news-description",
+            "news-image",
+            "news-date",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+
+          showToast(`📰 News "${title}" published ✓`);
+          renderNews();
+          await logAudit("News article published", `${title}`, "info");
+        } catch (e) {
+          errorDiv.textContent = "Error: " + e.message;
+          errorDiv.classList.remove("hidden");
+        }
+      };
+
+      function renderNews() {
+        const container = document.getElementById("news-list");
+        if (!container) return;
+
+        if (ALL_NEWS.length === 0) {
+          container.innerHTML = `<div class="text-xs text-muted text-center py-8">No news articles yet</div>`;
+          return;
+        }
+
+        container.innerHTML = ALL_NEWS.map(
+          (article) => `
+            <div class="rounded-2xl border border-slate-100 p-3 hover:border-primary transition">
+              <div class="flex gap-3">
+                <img
+                  src="${article.imageUrl}"
+                  alt="${article.title}"
+                  class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                  onerror="this.src='https://via.placeholder.com/64?text=No+Image'"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-2">
+                    <div>
+                      <div class="text-xs font-bold text-gold uppercase tracking-wider">${article.category}</div>
+                      <h4 class="font-semibold text-navy text-sm leading-snug">${article.title}</h4>
+                    </div>
+                    <button
+                      onclick="deleteNewsArticle('${article.id}')"
+                      class="text-danger hover:text-red-700 transition text-xs font-bold"
+                      title="Delete"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div class="text-xs text-muted mt-1">
+                    📅 ${new Date(article.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `,
+        ).join("");
+      }
+
+      window.deleteNewsArticle = async function (articleId) {
+        if (!confirm("Delete this news article?")) return;
+
+        try {
+          await deleteDoc(doc(db, "school_news", articleId));
+          ALL_NEWS = ALL_NEWS.filter((n) => n.id !== articleId);
+          renderNews();
+          showToast("✓ News article deleted");
+          await logAudit("News article deleted", `ID: ${articleId}`, "info");
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      async function loadNews() {
+        try {
+          const q = query(
+            collection(db, "school_news"),
+            orderBy("date", "desc"),
+          );
+          const snap = await getDocs(q);
+          ALL_NEWS = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          renderNews();
+        } catch (e) {
+          console.error("Error loading news:", e);
+        }
+      }
+
+      // Load news when view is activated
+      const originalActivate = window.activate;
+      window.activate = function (viewName) {
+        if (viewName === "news" && ALL_NEWS.length === 0) {
+          loadNews();
+        }
+        if (originalActivate) originalActivate(viewName);
+      };
+
+      let ALL_NEWS = [];
+
       async function logAudit(action, detail, level = "info") {
         try {
           await addDoc(collection(db, "audit_log"), {
             action,
             detail,
             level,
-            actor: DIRECTOR.displayName || DIRECTOR.email || "Director",
+            actor:
+              DIRECTOR.displayName ||
+              DIRECTOR.fullName ||
+              DIRECTOR.email ||
+              "Director",
             actorUid: DIRECTOR.uid,
             createdAt: serverTimestamp(),
           });
         } catch (e) {}
       }
+      window.logAudit = logAudit;
+
+      // ════════ ADMISSIONS MANAGEMENT ════════
+
+      // Load admissions data when view is activated
+      async function loadAdmissionsData() {
+        try {
+          const {
+            getAdmissionsStats,
+            getAvailableSpaces,
+            getRequirements,
+            getAllApplications,
+          } = await import("./admissions.js");
+
+          // Load stats
+          const stats = await getAdmissionsStats();
+          document.getElementById("adm-total").textContent = stats.total;
+          document.getElementById("adm-pending").textContent = stats.pending;
+          document.getElementById("adm-approved").textContent = stats.approved;
+          document.getElementById("adm-rejected").textContent = stats.rejected;
+
+          // Update sidebar badge
+          const badge = document.getElementById("admission-badge");
+          if (stats.pending > 0) {
+            badge.textContent = stats.pending;
+            badge.classList.remove("hidden");
+          } else {
+            badge.classList.add("hidden");
+          }
+
+          // Load available spaces
+          loadAvailableSpacesEditor();
+
+          // Load applications
+          loadApplicationsList();
+
+          // Load requirements
+          loadRequirementsList();
+
+          await logAudit(
+            "view_admissions",
+            "Viewed admissions management panel",
+          );
+        } catch (e) {
+          console.error("Error loading admissions data:", e);
+        }
+      }
+
+      // Sort classes in proper order
+      function getClassOrder() {
+        return [
+          "Pre-Primary 1",
+          "Pre-Primary 2",
+          "Grade 1",
+          "Grade 2",
+          "Grade 3",
+          "Grade 4",
+          "Grade 5",
+          "Grade 6",
+          "Grade 7 (JSS)",
+          "Grade 8 (JSS)",
+          "Grade 9 (JSS)",
+        ];
+      }
+
+      function sortSpacesByClass(spaces) {
+        const order = getClassOrder();
+        return Object.entries(spaces).sort(
+          ([a], [b]) => order.indexOf(a) - order.indexOf(b),
+        );
+      }
+
+      // Load available spaces for editing
+      async function loadAvailableSpacesEditor() {
+        try {
+          const { getAvailableSpaces } = await import("./admissions.js");
+          const spaces = await getAvailableSpaces();
+
+          const container = document.getElementById("available-spaces-editor");
+          container.innerHTML = sortSpacesByClass(spaces)
+            .map(
+              ([className, count]) => `
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <label class="block text-xs font-semibold text-muted mb-2">${className}</label>
+              <input
+                type="number"
+                value="${count}"
+                min="0"
+                max="100"
+                data-class="${className}"
+                class="available-spaces-input w-full px-3 py-2 rounded-lg border border-slate-200 text-center font-bold text-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          `,
+            )
+            .join("");
+        } catch (e) {
+          console.error("Error loading available spaces:", e);
+        }
+      }
+
+      // Save available spaces to Firestore
+      async function saveAvailableSpaces() {
+        try {
+          const { updateAvailableSpaces } = await import("./admissions.js");
+
+          const inputs = document.querySelectorAll(".available-spaces-input");
+          const updates = {};
+          inputs.forEach((input) => {
+            const className = input.dataset.class;
+            updates[className] = parseInt(input.value) || 0;
+          });
+
+          await updateAvailableSpaces(updates);
+          await loadAvailableSpacesEditor();
+          showSaveToast("Available spaces updated!");
+          await logAudit(
+            "update_spaces",
+            `Updated available spaces: ${JSON.stringify(updates).substring(0, 100)}`,
+          );
+        } catch (e) {
+          console.error("Error saving available spaces:", e);
+          alert("Error saving. Please try again.");
+        }
+      }
+
+      // Load applications list
+      async function loadApplicationsList() {
+        try {
+          const { getAllApplications } = await import("./admissions.js");
+          window.ALL_APPLICATIONS = await getAllApplications();
+          filterApplications();
+        } catch (e) {
+          console.error("Error loading applications:", e);
+        }
+      }
+
+      // Filter and display applications
+      async function filterApplications() {
+        try {
+          const search = document
+            .getElementById("app-search")
+            .value.toLowerCase();
+          const statusFilter =
+            document.getElementById("app-status-filter").value;
+
+          let filtered = window.ALL_APPLICATIONS || [];
+          if (statusFilter) {
+            filtered = filtered.filter((app) => app.status === statusFilter);
+          }
+          if (search) {
+            filtered = filtered.filter(
+              (app) =>
+                `${app.childFirstName} ${app.childLastName}`
+                  .toLowerCase()
+                  .includes(search) ||
+                app.parentEmail.toLowerCase().includes(search),
+            );
+          }
+
+          const container = document.getElementById("applications-list");
+          if (filtered.length === 0) {
+            container.innerHTML =
+              '<div class="text-center py-6 text-muted text-xs">No applications found.</div>';
+            return;
+          }
+
+          container.innerHTML = filtered
+            .map((app) => {
+              const statusColor =
+                app.status === "pending"
+                  ? "softYellow"
+                  : app.status === "approved"
+                    ? "softGreen"
+                    : "softPink";
+              const statusText =
+                app.status.charAt(0).toUpperCase() + app.status.slice(1);
+              const statusBadgeClass =
+                app.status === "pending"
+                  ? "badge-pending"
+                  : app.status === "approved"
+                    ? "badge-approved"
+                    : "badge-rejected";
+
+              return `
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <h4 class="font-semibold text-navy text-sm">
+                    ${app.childFirstName} ${app.childLastName}
+                  </h4>
+                  <p class="text-xs text-muted mt-1">
+                    📧 ${app.parentEmail}<br/>
+                    📞 ${app.parentPhone}
+                  </p>
+                </div>
+                <span class="badge ${statusBadgeClass}">${statusText}</span>
+              </div>
+              <div class="flex gap-2 text-xs mb-3">
+                <span class="bg-slate-200 text-navy px-2 py-1 rounded">📚 ${app.applyingFor}</span>
+                <span class="bg-slate-200 text-navy px-2 py-1 rounded">📅 ${new Date(app.submittedAt).toLocaleDateString()}</span>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  onclick="viewApplicationDetail('${app.id}')"
+                  class="flex-1 py-1.5 bg-primary/10 text-primary text-xs font-semibold rounded-lg hover:bg-primary/20 transition"
+                >
+                  View Details
+                </button>
+                <button
+                  onclick="approveApplication('${app.id}')"
+                  class="px-3 py-1.5 bg-success/10 text-success text-xs font-semibold rounded-lg hover:bg-success/20 transition"
+                  ${app.status !== "pending" ? "disabled" : ""}
+                >
+                  ✓ Approve
+                </button>
+                <button
+                  onclick="rejectApplication('${app.id}')"
+                  class="px-3 py-1.5 bg-danger/10 text-danger text-xs font-semibold rounded-lg hover:bg-danger/20 transition"
+                  ${app.status !== "pending" ? "disabled" : ""}
+                >
+                  ✕ Reject
+                </button>
+              </div>
+            </div>
+          `;
+            })
+            .join("");
+        } catch (e) {
+          console.error("Error filtering applications:", e);
+        }
+      }
+
+      // Approve application
+      async function approveApplication(appId) {
+        try {
+          if (!confirm("Approve this application?")) return;
+
+          const { updateApplicationStatus } = await import("./admissions.js");
+          await updateApplicationStatus(
+            appId,
+            "approved",
+            "Approved by director",
+          );
+          showSaveToast("Application approved!");
+          loadApplicationsList();
+          await logAudit("approve_app", `Approved application ${appId}`);
+        } catch (e) {
+          console.error("Error approving:", e);
+          alert("Error approving application");
+        }
+      }
+
+      // Reject application
+      async function rejectApplication(appId) {
+        try {
+          window.CURRENT_REJECT_APP_ID = appId;
+          document.getElementById("rejection-reason").value = "";
+          openModal("modal-rejection");
+        } catch (e) {
+          console.error("Error opening rejection modal:", e);
+          alert("Error opening rejection form");
+        }
+      }
+
+      // Submit rejection
+      async function submitRejection() {
+        try {
+          const appId = window.CURRENT_REJECT_APP_ID;
+          const reason = document
+            .getElementById("rejection-reason")
+            .value.trim();
+
+          const { updateApplicationStatus } = await import("./admissions.js");
+          await updateApplicationStatus(appId, "rejected", reason);
+          showSaveToast("Application rejected");
+          closeModal("modal-rejection");
+          loadApplicationsList();
+          await logAudit("reject_app", `Rejected application ${appId}`);
+        } catch (e) {
+          console.error("Error rejecting:", e);
+          alert("Error rejecting application");
+        }
+      }
+
+      // View application details
+      async function viewApplicationDetail(appId) {
+        try {
+          const { getApplication } = await import("./admissions.js");
+          const app = await getApplication(appId);
+
+          const rows = [
+            {
+              label: "Child Name",
+              value: `${app.childFirstName} ${app.childLastName}`,
+            },
+            { label: "Date of Birth", value: app.dateOfBirth || "N/A" },
+            { label: "Applying For", value: app.applyingFor || "N/A" },
+            { label: "Parent/Guardian", value: app.parentName || "N/A" },
+            { label: "Parent Email", value: app.parentEmail || "N/A" },
+            { label: "Parent Phone", value: app.parentPhone || "N/A" },
+            {
+              label: "Status",
+              value: app.status ? app.status.toUpperCase() : "N/A",
+            },
+            {
+              label: "Submitted",
+              value: app.submittedAt
+                ? new Date(app.submittedAt).toLocaleString()
+                : "N/A",
+            },
+            { label: "Reviewed", value: app.reviewed ? "Yes" : "No" },
+            {
+              label: "Reviewed At",
+              value: app.reviewedAt || "Not reviewed yet",
+            },
+            { label: "Notes", value: app.notes || "None" },
+            {
+              label: "Additional Message",
+              value: app.additionalMessage || "None",
+            },
+          ];
+
+          document.getElementById("application-details-body").innerHTML = rows
+            .map(
+              (row) => `
+                <div class="grid grid-cols-12 gap-3 items-center py-2 border-b border-slate-200 last:border-0">
+                  <div class="col-span-4 text-slate-500 text-sm font-semibold">${row.label}</div>
+                  <div class="col-span-8 text-slate-800 text-sm">${row.value}</div>
+                </div>
+              `,
+            )
+            .join("");
+
+          openModal("modal-application-details");
+        } catch (e) {
+          console.error("Error viewing details:", e);
+          alert("Error loading application details");
+        }
+      }
+
+      // Load requirements for editing
+      async function loadRequirementsList() {
+        try {
+          const { getRequirements } = await import("./admissions.js");
+          const requirements = await getRequirements();
+          window.CURRENT_REQUIREMENTS = [...requirements];
+
+          const container = document.getElementById("requirements-list");
+          container.innerHTML = window.CURRENT_REQUIREMENTS.map(
+            (req, idx) => `
+            <div class="flex gap-2 items-start bg-slate-50 rounded-xl p-3 border border-slate-200">
+              <div class="flex-1">
+                <input
+                  type="text"
+                  value="${req}"
+                  onchange="updateRequirement(${idx}, this.value)"
+                  class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                onclick="removeRequirement(${idx})"
+                class="p-2 hover:bg-danger/10 text-danger rounded-lg transition text-sm"
+              >
+                ✕
+              </button>
+            </div>
+          `,
+          ).join("");
+        } catch (e) {
+          console.error("Error loading requirements:", e);
+        }
+      }
+
+      // Add new requirement
+      function addRequirement() {
+        window.CURRENT_REQUIREMENTS = window.CURRENT_REQUIREMENTS || [];
+        window.CURRENT_REQUIREMENTS.push("New requirement");
+        loadRequirementsList();
+      }
+
+      // Update requirement
+      function updateRequirement(idx, value) {
+        window.CURRENT_REQUIREMENTS[idx] = value;
+      }
+
+      // Remove requirement
+      function removeRequirement(idx) {
+        window.CURRENT_REQUIREMENTS.splice(idx, 1);
+        loadRequirementsList();
+      }
+
+      // Save requirements
+      async function saveRequirements() {
+        try {
+          const { updateRequirements } = await import("./admissions.js");
+          const requirements = window.CURRENT_REQUIREMENTS.filter((r) =>
+            r.trim(),
+          );
+          await updateRequirements(requirements);
+          showSaveToast("Requirements updated!");
+          await logAudit(
+            "update_reqs",
+            `Updated requirements: ${requirements.length} items`,
+          );
+        } catch (e) {
+          console.error("Error saving requirements:", e);
+          alert("Error saving requirements");
+        }
+      }
+
+      // Switch admissions tabs
+      function switchAdmissionsTab(tabName) {
+        // Hide all tabs
+        document
+          .getElementById("tab-content-applications")
+          .classList.add("hidden");
+        document
+          .getElementById("tab-content-requirements")
+          .classList.add("hidden");
+
+        // Show selected tab
+        document
+          .getElementById(`tab-content-${tabName}`)
+          .classList.remove("hidden");
+
+        // Update tab buttons
+        document
+          .getElementById("tab-applications")
+          .classList.toggle("border-primary", tabName === "applications");
+        document
+          .getElementById("tab-applications")
+          .classList.toggle("text-primary", tabName === "applications");
+        document
+          .getElementById("tab-applications")
+          .classList.toggle("border-transparent", tabName !== "applications");
+        document
+          .getElementById("tab-applications")
+          .classList.toggle("text-muted", tabName !== "applications");
+
+        document
+          .getElementById("tab-requirements")
+          .classList.toggle("border-primary", tabName === "requirements");
+        document
+          .getElementById("tab-requirements")
+          .classList.toggle("text-primary", tabName === "requirements");
+        document
+          .getElementById("tab-requirements")
+          .classList.toggle("border-transparent", tabName !== "requirements");
+        document
+          .getElementById("tab-requirements")
+          .classList.toggle("text-muted", tabName !== "requirements");
+      }
+
+      // Expose admissions functions to global scope for inline handlers
+      window.switchAdmissionsTab = switchAdmissionsTab;
+      window.viewApplicationDetail = viewApplicationDetail;
+      window.approveApplication = approveApplication;
+      window.rejectApplication = rejectApplication;
+      window.submitRejection = submitRejection;
+      window.saveAvailableSpaces = saveAvailableSpaces;
+      window.addRequirement = addRequirement;
+      window.saveRequirements = saveRequirements;
+      window.removeRequirement = removeRequirement;
+      window.updateRequirement = updateRequirement;
+      window.filterApplications = filterApplications;
+      window.loadApplicationsList = loadApplicationsList;
+      window.loadAdmissionsData = loadAdmissionsData;
+
+      // Update original activate function
+      const origActivate = window.activate;
+      window.activate = function (viewName) {
+        if (viewName === "admissions") {
+          loadAdmissionsData();
+        }
+        origActivate(viewName);
+      };
 
       window.confirmLogout = function () {
         if (confirm("Sign out of the Director Panel?")) {

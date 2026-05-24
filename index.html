@@ -285,9 +285,141 @@
         background: #fef3c7;
         color: #92400e;
       }
+
+      /* Success Modal Animations */
+      @keyframes scaleInBounce {
+        0% {
+          opacity: 0;
+          transform: scale(0.8) translateY(20px);
+        }
+        60% {
+          transform: scale(1.05);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      @keyframes checkmark {
+        0% {
+          stroke-dasharray: 50;
+          stroke-dashoffset: 50;
+        }
+        100% {
+          stroke-dasharray: 0;
+          stroke-dashoffset: 0;
+        }
+      }
+
+      #success-modal:not(.hidden) {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      #success-modal:not(.hidden) .relative {
+        animation: scaleInBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      #success-modal svg {
+        animation: checkmark 0.6s ease-out 0.2s forwards;
+        stroke-dasharray: 50;
+        stroke-dashoffset: 50;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
     </style>
   </head>
   <body>
+    <!-- Success Animation Modal -->
+    <div
+      id="success-modal"
+      class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    >
+      <!-- Backdrop -->
+      <div
+        class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onclick="closeSuccessModal()"
+      ></div>
+
+      <!-- Modal Content -->
+      <div
+        class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform transition-all animate-bounce"
+      >
+        <!-- Checkmark Animation -->
+        <div class="flex justify-center mb-6">
+          <div
+            class="w-20 h-20 rounded-full bg-gradient-to-br from-gold to-gold-light flex items-center justify-center shadow-lg"
+            id="success-check"
+          >
+            <svg
+              class="w-10 h-10 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="3"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Text -->
+        <h2 class="font-serif text-3xl font-bold text-navy text-center mb-3">
+          Application Submitted!
+        </h2>
+        <p class="text-slate2 text-center mb-6">
+          Thank you for applying to
+          <strong>St. Mary's Academy</strong>. We will review your application
+          and contact you within <strong>24 hours</strong>.
+        </p>
+
+        <!-- Application ID -->
+        <div class="bg-gold/5 rounded-2xl p-4 mb-6 text-center">
+          <p class="text-xs text-muted mb-1">Your Application ID</p>
+          <p class="font-mono font-bold text-navy text-lg" id="success-app-id">
+            —
+          </p>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex gap-3">
+          <button
+            onclick="closeSuccessModal()"
+            class="flex-1 bg-navy text-white py-3 rounded-lg font-semibold hover:bg-navy/90 transition-all"
+          >
+            Return Home
+          </button>
+          <a
+            href="tel:+254700000000"
+            class="flex-1 border-2 border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold/5 transition-all text-center"
+          >
+            Call Us
+          </a>
+        </div>
+      </div>
+    </div>
+
     <!-- ============================
   NAVIGATION
 ============================= -->
@@ -543,55 +675,135 @@
         </div>
       </section>
 
-      <!-- News Ticker -->
-      <div class="bg-navy py-3 overflow-hidden">
-        <div class="flex items-center gap-4">
-          <div
-            class="bg-gold text-white text-xs font-bold px-4 py-1.5 whitespace-nowrap uppercase tracking-wider flex-shrink-0 ml-4"
-          >
-            Live News
+      <!-- Live News Section -->
+      <section class="py-24 bg-cream">
+        <div class="max-w-7xl mx-auto px-6">
+          <div class="text-center mb-16 fade-up">
+            <div class="gold-line mx-auto mb-6"></div>
+            <p
+              class="text-gold text-sm font-semibold tracking-widest uppercase mb-3"
+            >
+              Latest Updates
+            </p>
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-navy">
+              Live News & Events
+            </h2>
           </div>
-          <div class="overflow-hidden flex-1">
-            <div class="ticker-track text-white/80 text-sm gap-16">
-              <span class="px-8"
-                >📢 Term 2 admission interviews begin May 5th – Limited spaces
-                available</span
-              >
-              <span class="px-8"
-                >🏆 St. Mary's wins Regional CBC Science Fair 2024 –
-                Congratulations!</span
-              >
-              <span class="px-8"
-                >📅 Inter-school Athletics Meet – Saturday 27th April at Kairi
-                Campus</span
-              >
-              <span class="px-8">📚 Mid-term break: 3rd – 7th May 2025</span>
-              <span class="px-8"
-                >🎓 Form 1 CBC Junior Secondary orientation – 10th May
-                2025</span
-              >
-              <!-- duplicate for seamless loop -->
-              <span class="px-8"
-                >📢 Term 2 admission interviews begin May 5th – Limited spaces
-                available</span
-              >
-              <span class="px-8"
-                >🏆 St. Mary's wins Regional CBC Science Fair 2024 –
-                Congratulations!</span
-              >
-              <span class="px-8"
-                >📅 Inter-school Athletics Meet – Saturday 27th April at Kairi
-                Campus</span
-              >
-              <span class="px-8">📚 Mid-term break: 3rd – 7th May 2025</span>
-              <span class="px-8"
-                >🎓 Form 1 CBC Junior Secondary orientation – 10th May
-                2025</span
-              >
+          <div class="grid md:grid-cols-3 gap-8" id="news-grid">
+            <!-- News cards will be loaded from Firestore here -->
+            <div
+              class="card-hover bg-white rounded-2xl overflow-hidden border border-gray-100 fade-up shadow-md hover:shadow-xl transition-shadow"
+            >
+              <div class="img-overlay h-56 bg-navy-800">
+                <img
+                  src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80"
+                  alt="News"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="p-6">
+                <div
+                  class="text-gold text-xs font-bold uppercase tracking-wider mb-2"
+                >
+                  Academic
+                </div>
+                <h3 class="font-serif text-xl font-bold text-navy mb-3">
+                  Term 2 Admission Interviews Begin
+                </h3>
+                <p class="text-slate2 text-sm leading-relaxed mb-4">
+                  Limited spaces available for Term 2 intake. Our admission
+                  interviews begin May 5th. Register your child today for a
+                  transformative learning journey.
+                </p>
+                <div
+                  class="flex items-center justify-between pt-4 border-t border-gray-100"
+                >
+                  <span class="text-xs text-slate2">📅 May 5, 2025</span>
+                  <a
+                    href="#"
+                    class="text-gold font-semibold text-sm hover:text-gold-light transition-colors"
+                    >Read More →</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-2xl overflow-hidden border border-gray-100 fade-up shadow-md hover:shadow-xl transition-shadow"
+            >
+              <div class="img-overlay h-56 bg-navy-800">
+                <img
+                  src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80"
+                  alt="News"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="p-6">
+                <div
+                  class="text-gold text-xs font-bold uppercase tracking-wider mb-2"
+                >
+                  Achievement
+                </div>
+                <h3 class="font-serif text-xl font-bold text-navy mb-3">
+                  CBC Science Fair Victory
+                </h3>
+                <p class="text-slate2 text-sm leading-relaxed mb-4">
+                  Congratulations to our students for winning the Regional CBC
+                  Science Fair 2024! A testament to innovation, creativity, and
+                  scientific excellence at St. Mary's.
+                </p>
+                <div
+                  class="flex items-center justify-between pt-4 border-t border-gray-100"
+                >
+                  <span class="text-xs text-slate2">🏆 April 2024</span>
+                  <a
+                    href="#"
+                    class="text-gold font-semibold text-sm hover:text-gold-light transition-colors"
+                    >Read More →</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="card-hover bg-white rounded-2xl overflow-hidden border border-gray-100 fade-up shadow-md hover:shadow-xl transition-shadow"
+            >
+              <div class="img-overlay h-56 bg-navy-800">
+                <img
+                  src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&q=80"
+                  alt="News"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="p-6">
+                <div
+                  class="text-gold text-xs font-bold uppercase tracking-wider mb-2"
+                >
+                  Sports
+                </div>
+                <h3 class="font-serif text-xl font-bold text-navy mb-3">
+                  Inter-School Athletics Meet
+                </h3>
+                <p class="text-slate2 text-sm leading-relaxed mb-4">
+                  Join us for our inter-school athletics championship! Saturday,
+                  27th April at our Kairi Campus. Witness excellence in sports
+                  and sportsmanship.
+                </p>
+                <div
+                  class="flex items-center justify-between pt-4 border-t border-gray-100"
+                >
+                  <span class="text-xs text-slate2">📅 April 27, 2025</span>
+                  <a
+                    href="#"
+                    class="text-gold font-semibold text-sm hover:text-gold-light transition-colors"
+                    >Read More →</a
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Stats Bar -->
       <section class="bg-navy-800 bg-[#112236] py-14">
@@ -1538,7 +1750,20 @@
   ABOUT PAGE
 ============================= -->
     <div id="page-about" class="page-section">
-      <div class="page-header text-center">
+      <div
+        class="page-header text-center"
+        style="
+          background-image:
+            linear-gradient(
+              135deg,
+              rgba(13, 27, 42, 0.92) 0%,
+              rgba(13, 27, 42, 0.75) 100%
+            ),
+            url(&quot;https://images.unsplash.com/photo-1496317556649-f930d733eea2?w=1600&q=80&quot;);
+          background-size: cover;
+          background-position: center;
+        "
+      >
         <div class="max-w-3xl mx-auto px-6">
           <p
             class="text-gold text-sm font-semibold tracking-widest uppercase mb-3"
@@ -1791,7 +2016,20 @@
   ACADEMICS PAGE
 ============================= -->
     <div id="page-academics" class="page-section">
-      <div class="page-header text-center">
+      <div
+        class="page-header text-center"
+        style="
+          background-image:
+            linear-gradient(
+              135deg,
+              rgba(13, 27, 42, 0.92) 0%,
+              rgba(13, 27, 42, 0.75) 100%
+            ),
+            url(&quot;https://images.unsplash.com/photo-1513246946111-4d09f61e08b5?w=1600&q=80&quot;);
+          background-size: cover;
+          background-position: center;
+        "
+      >
         <div class="max-w-3xl mx-auto px-6">
           <p
             class="text-gold text-sm font-semibold tracking-widest uppercase mb-3"
@@ -2056,7 +2294,20 @@
   ADMISSIONS PAGE
 ============================= -->
     <div id="page-admissions" class="page-section">
-      <div class="page-header text-center">
+      <div
+        class="page-header text-center"
+        style="
+          background-image:
+            linear-gradient(
+              135deg,
+              rgba(13, 27, 42, 0.92) 0%,
+              rgba(13, 27, 42, 0.75) 100%
+            ),
+            url(&quot;https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1600&q=80&quot;);
+          background-size: cover;
+          background-position: center;
+        "
+      >
         <div class="max-w-3xl mx-auto px-6">
           <p
             class="text-gold text-sm font-semibold tracking-widest uppercase mb-3"
@@ -2080,28 +2331,28 @@
               <h3 class="font-serif text-xl font-bold text-navy mb-4">
                 Available Places
               </h3>
-              <div class="space-y-3">
-                <div
-                  class="flex justify-between items-center py-2 border-b border-gray-50"
-                >
-                  <span class="text-slate2 text-sm">Pre-Primary 1 & 2</span
-                  ><span class="text-gold font-bold text-sm">12 spaces</span>
-                </div>
-                <div
-                  class="flex justify-between items-center py-2 border-b border-gray-50"
-                >
-                  <span class="text-slate2 text-sm">Grade 1 – 3</span
-                  ><span class="text-gold font-bold text-sm">8 spaces</span>
-                </div>
-                <div
-                  class="flex justify-between items-center py-2 border-b border-gray-50"
-                >
-                  <span class="text-slate2 text-sm">Grade 4 – 6</span
-                  ><span class="text-gold font-bold text-sm">5 spaces</span>
-                </div>
-                <div class="flex justify-between items-center py-2">
-                  <span class="text-slate2 text-sm">Grade 7 – 9 (JSS)</span
-                  ><span class="text-gold font-bold text-sm">10 spaces</span>
+              <div class="space-y-3" id="available-spaces-list">
+                <div class="flex justify-center py-4">
+                  <svg
+                    class="w-6 h-6 text-gold animate-spin"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
                 </div>
               </div>
             </div>
@@ -2192,6 +2443,7 @@
                       >Applying For *</label
                     >
                     <select
+                      id="applying-for-select"
                       class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-gold transition-all bg-white"
                     >
                       <option>Pre-Primary 1</option>
@@ -2443,7 +2695,20 @@
   GALLERY PAGE
 ============================= -->
     <div id="page-gallery" class="page-section">
-      <div class="page-header text-center">
+      <div
+        class="page-header text-center"
+        style="
+          background-image:
+            linear-gradient(
+              135deg,
+              rgba(13, 27, 42, 0.92) 0%,
+              rgba(13, 27, 42, 0.75) 100%
+            ),
+            url(&quot;https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1600&q=80&quot;);
+          background-size: cover;
+          background-position: center;
+        "
+      >
         <div class="max-w-3xl mx-auto px-6">
           <p
             class="text-gold text-sm font-semibold tracking-widest uppercase mb-3"
@@ -2625,7 +2890,20 @@
   CONTACT PAGE
 ============================= -->
     <div id="page-contact" class="page-section">
-      <div class="page-header text-center">
+      <div
+        class="page-header text-center"
+        style="
+          background-image:
+            linear-gradient(
+              135deg,
+              rgba(13, 27, 42, 0.92) 0%,
+              rgba(13, 27, 42, 0.75) 100%
+            ),
+            url(&quot;https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&q=80&quot;);
+          background-size: cover;
+          background-position: center;
+        "
+      >
         <div class="max-w-3xl mx-auto px-6">
           <p
             class="text-gold text-sm font-semibold tracking-widest uppercase mb-3"
@@ -3093,17 +3371,272 @@
         }, 3500);
       }
 
-      function submitApplication() {
-        showToast(
-          "Application submitted! We will contact you within 24 hours.",
-        );
+      // Show success modal
+      function showSuccessModal(appId) {
+        document.getElementById("success-app-id").textContent = appId;
+        document.getElementById("success-modal").classList.remove("hidden");
+        document.getElementById("success-check").style.animation =
+          "pulse 0.5s ease-in-out";
       }
+
+      function closeSuccessModal() {
+        document.getElementById("success-modal").classList.add("hidden");
+        showPage("admissions");
+      }
+
+      // Handle application submission
+      async function submitApplication() {
+        try {
+          // Get form data
+          const form = event.target.closest(".space-y-5");
+          const inputs = form.querySelectorAll("input, select, textarea");
+
+          const appData = {
+            childFirstName: inputs[0].value,
+            childLastName: inputs[1].value,
+            dateOfBirth: inputs[2].value,
+            applyingFor: inputs[3].value,
+            parentName: inputs[4].value,
+            parentPhone: inputs[5].value,
+            parentEmail: inputs[6].value,
+            additionalMessage: inputs[7].value,
+          };
+
+          // Validate required fields
+          if (
+            !appData.childFirstName ||
+            !appData.childLastName ||
+            !appData.dateOfBirth ||
+            !appData.applyingFor ||
+            !appData.parentName ||
+            !appData.parentPhone
+          ) {
+            showToast("Please fill in all required fields (*)");
+            return;
+          }
+
+          // Import and use admissions module
+          const { submitApplication: firebaseSubmitApp } =
+            await import("./admissions.js");
+
+          // Submit to Firebase
+          const result = await firebaseSubmitApp(appData);
+
+          // Show success modal
+          showSuccessModal(result.applicationId.substring(0, 8).toUpperCase());
+
+          // Clear form
+          inputs.forEach((input) => {
+            if (input.type !== "email" && input.type !== "tel") {
+              input.value = "";
+            }
+          });
+        } catch (error) {
+          console.error("Error submitting application:", error);
+          showToast("Error submitting application. Please try again.");
+        }
+      }
+
       function submitContact() {
         showToast("Message sent! Our team will respond shortly.");
       }
 
+      // Sort classes in proper order
+      function getClassOrder() {
+        return [
+          "Pre-Primary 1",
+          "Pre-Primary 2",
+          "Grade 1",
+          "Grade 2",
+          "Grade 3",
+          "Grade 4",
+          "Grade 5",
+          "Grade 6",
+          "Grade 7 (JSS)",
+          "Grade 8 (JSS)",
+          "Grade 9 (JSS)",
+        ];
+      }
+
+      function sortSpacesByClass(spaces) {
+        const order = getClassOrder();
+        return Object.entries(spaces).sort(
+          ([a], [b]) => order.indexOf(a) - order.indexOf(b),
+        );
+      }
+
+      // Load available spaces dynamically
+      async function loadAvailableSpaces() {
+        try {
+          const { getAvailableSpaces } = await import("./admissions.js");
+          const spaces = await getAvailableSpaces();
+
+          const container = document.getElementById("available-spaces-list");
+          const html = sortSpacesByClass(spaces)
+            .map(
+              ([className, count]) => `
+            <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h4 class="text-sm font-semibold text-navy">${className}</h4>
+                  <p class="text-slate2 text-xs mt-1">Seats currently available for this class.</p>
+                </div>
+                <div class="text-gold font-bold text-sm">${count} spaces</div>
+              </div>
+            </div>
+          `,
+            )
+            .join("");
+
+          container.innerHTML = `<div class="grid gap-3 sm:grid-cols-2">${html}</div>`;
+        } catch (error) {
+          console.error("Error loading available spaces:", error);
+          document.getElementById("available-spaces-list").innerHTML =
+            '<div class="text-slate2 text-xs text-center py-4">Unable to load available spaces</div>';
+        }
+      }
+
+      // Load applying for options
+      async function loadApplyingForOptions() {
+        try {
+          const { getAvailableSpaces } = await import("./admissions.js");
+          const spaces = await getAvailableSpaces();
+
+          const select = document.getElementById("applying-for-select");
+          if (!select) return;
+
+          const existingClasses = Array.from(
+            select.querySelectorAll("option"),
+          ).map((opt) => opt.textContent);
+
+          Object.keys(spaces).forEach((className) => {
+            if (!existingClasses.includes(className)) {
+              const option = document.createElement("option");
+              option.value = className;
+              option.textContent = className;
+              select.appendChild(option);
+            }
+          });
+        } catch (error) {
+          console.error("Error loading applying for options:", error);
+        }
+      }
+
       // Trigger initial animations
       setTimeout(observeFadeUps, 300);
+
+      // Load admissions data when page loads
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          loadAvailableSpaces();
+          loadApplyingForOptions();
+        });
+      } else {
+        loadAvailableSpaces();
+        loadApplyingForOptions();
+      }
+
+      // ════════ LOAD NEWS FROM FIRESTORE ════════
+      (async () => {
+        try {
+          // Import Firebase modules
+          const { collection, query, orderBy, getDocs } =
+            await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+          // Import config and db
+          const { firebaseConfig, db } =
+            await import("./firebase-config.js").catch(() => ({}));
+
+          if (!firebaseConfig || !db) {
+            console.warn("Firebase config not available");
+            return;
+          }
+
+          // Load news articles
+          async function loadNewsForHomepage() {
+            try {
+              const q = query(
+                collection(db, "school_news"),
+                orderBy("date", "desc"),
+              );
+              const snapshot = await getDocs(q);
+              const newsGrid = document.getElementById("news-grid");
+
+              if (snapshot.empty) {
+                console.log("No news articles found");
+                return;
+              }
+
+              // Get first 3 articles
+              const articles = snapshot.docs
+                .slice(0, 3)
+                .map((doc) => ({ id: doc.id, ...doc.data() }));
+
+              // Render news cards
+              newsGrid.innerHTML = articles
+                .map(
+                  (article) => `
+                    <div
+                      class="card-hover bg-white rounded-2xl overflow-hidden border border-gray-100 fade-up shadow-md hover:shadow-xl transition-shadow"
+                    >
+                      <div class="img-overlay h-56 bg-navy-800">
+                        <img
+                          src="${article.imageUrl}"
+                          alt="${article.title}"
+                          class="w-full h-full object-cover"
+                          onerror="this.src='https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80'"
+                        />
+                      </div>
+                      <div class="p-6">
+                        <div class="text-gold text-xs font-bold uppercase tracking-wider mb-2">
+                          ${article.category}
+                        </div>
+                        <h3 class="font-serif text-xl font-bold text-navy mb-3">
+                          ${article.title}
+                        </h3>
+                        <p class="text-slate2 text-sm leading-relaxed mb-4">
+                          ${article.description}
+                        </p>
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <span class="text-xs text-slate2">
+                            📅 ${new Date(article.date).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
+                          </span>
+                          <a
+                            href="#"
+                            class="text-gold font-semibold text-sm hover:text-gold-light transition-colors"
+                            >Read More →</a
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  `,
+                )
+                .join("");
+
+              // Trigger fade-up animations
+              setTimeout(observeFadeUps, 100);
+            } catch (error) {
+              console.error("Error loading news:", error);
+            }
+          }
+
+          // Load news when page is ready
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", loadNewsForHomepage);
+          } else {
+            loadNewsForHomepage();
+          }
+        } catch (error) {
+          console.error("Firebase initialization error:", error);
+        }
+      })();
     </script>
   </body>
 </html>
