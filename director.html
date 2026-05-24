@@ -6,6 +6,10 @@
     <title>Kairi St Mary's | Director's Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+      emailjs.init("XSJCp8NoJoXsoJX6Y");
+    </script>
     <script>
       tailwind.config = {
         theme: {
@@ -3793,13 +3797,15 @@
           storage = cfg.storage;
         } else {
           const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
+            apiKey: "AIzaSyB04w9bPdE7cpoBUVRWcmG_SNQiL6cB3RY",
+            authDomain: "kairi-st-mary-s.firebaseapp.com",
+            projectId: "kairi-st-mary-s",
+            storageBucket: "kairi-st-mary-s.firebasestorage.app",
+            messagingSenderId: "903898779898",
+            appId: "1:903898779898:web:8edda07fc67c5b98947943",
+            measurementId: "G-8GPY6EW0V9",
           };
+
           app = initializeApp(firebaseConfig);
           auth = getAuth(app);
           db = getFirestore(app);
@@ -6111,21 +6117,35 @@
         try {
           if (!confirm("Approve this application?")) return;
 
-          const { updateApplicationStatus } = await import("./admissions.js");
+          const { updateApplicationStatus, getApplication } =
+            await import("./admissions.js");
+
+          // Fetch application data first (to get parent email etc.)
+          const app = await getApplication(appId);
+
+          // Update status in Firestore
           await updateApplicationStatus(
             appId,
             "approved",
             "Approved by director",
           );
-          showSaveToast("Application approved!");
+
+          // Send approval email to parent
+          await emailjs.send("service_zhaa3hc", "template_gpuxeza", {
+            to_email: app.parentEmail,
+            parent_name: app.parentName,
+            child_name: `${app.childFirstName} ${app.childLastName}`,
+            applying_for: app.applyingFor,
+          });
+
+          showSaveToast("Application approved & email sent!");
           loadApplicationsList();
           await logAudit("approve_app", `Approved application ${appId}`);
         } catch (e) {
           console.error("Error approving:", e);
-          alert("Error approving application");
+          alert("Error approving application: " + e.message);
         }
       }
-
       // Reject application
       async function rejectApplication(appId) {
         try {
@@ -6146,15 +6166,36 @@
             .getElementById("rejection-reason")
             .value.trim();
 
-          const { updateApplicationStatus } = await import("./admissions.js");
+          if (!reason) {
+            alert("Please enter a rejection reason before submitting.");
+            return;
+          }
+
+          const { updateApplicationStatus, getApplication } =
+            await import("./admissions.js");
+
+          // Fetch application data first
+          const app = await getApplication(appId);
+
+          // Update status in Firestore
           await updateApplicationStatus(appId, "rejected", reason);
-          showSaveToast("Application rejected");
+
+          // Send rejection email to parent
+          await emailjs.send("service_zhaa3hc", "template_wbkipcb", {
+            to_email: app.parentEmail,
+            parent_name: app.parentName,
+            child_name: `${app.childFirstName} ${app.childLastName}`,
+            applying_for: app.applyingFor,
+            rejection_reason: reason,
+          });
+
+          showSaveToast("Application rejected & email sent!");
           closeModal("modal-rejection");
           loadApplicationsList();
           await logAudit("reject_app", `Rejected application ${appId}`);
         } catch (e) {
           console.error("Error rejecting:", e);
-          alert("Error rejecting application");
+          alert("Error rejecting application: " + e.message);
         }
       }
 
